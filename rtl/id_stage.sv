@@ -7,6 +7,13 @@ module id_stage import riscv_cpu_pkg::*;
   input  logic            [31:0] instr_rdata_i,
   input  logic            [31:0] pc_id_i,
 
+  // Signals from WB pipeline stage
+  input  logic  [DATA_WIDTH-1:0] waddr_a_i,
+  input  logic  [DATA_WIDTH-1:0] wdata_a_i,
+  input  logic                   we_a_i,
+
+  // Control signals
+
   // Output of ID pipeline stage
   output logic  [DATA_WIDTH-1:0] data_a_o,
   output logic  [DATA_WIDTH-1:0] data_b_o,
@@ -47,6 +54,7 @@ module id_stage import riscv_cpu_pkg::*;
   logic reg_we_a;
   logic alu_op;
   logic alu_op;
+  logic [DATA_WIDTH-1:0] imm;
   
 
   logic [31:0] pc_id_d;
@@ -77,26 +85,29 @@ module id_stage import riscv_cpu_pkg::*;
     .alu_op_o       (alu_op),
     .reg_raddr_a_o  (reg_raddr_a),
     .reg_raddr_b_o  (reg_raddr_b),
-    .reg_waddr_a_o  (reg_waddr_a),
-    .reg_we_a_o     (reg_we_a)
+    .imm_o          (imm)
   );
 
-  assign raddr_a = reg_raddr_a;
-  assign raddr_b = reg_raddr_b;
-  assign waddr_a = reg_waddr_a;
-  assign we_a    = reg_we_a;
+  assign raddr_a          = reg_raddr_a;
+  assign raddr_b          = reg_raddr_b;
 
-  assign pc_id_d = pc_id_i;
-  assign instr_rdata_d = instr_rdata_i;
-  assign alu_op_d = alu_op;
+  assign waddr_a          = waddr_a_i;
+  assign wdata_a          = wdata_a_i;
+  assign we_a             = we_a_i;
+
+  assign pc_id_d          = pc_id_i;
+  assign instr_rdata_d    = instr_rdata_i;
+  assign alu_op_d         = alu_op;
   
 
   always_comb begin
     unique case(data_a_mux)
-      default:    data_a_d = rdata_a;
+      OP_A_REG:   data_a_d = rdata_a;
+      OP_A_IMM:   data_a_d = imm;
     endcase
     unique case(data_b_mux)
-      default:    data_b_d = rdata_b;
+      OP_B_REG:    data_b_d = rdata_b;
+      OP_B_IMM:    data_b_d = imm;
     endcase
   end
 

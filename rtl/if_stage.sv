@@ -1,4 +1,4 @@
-module if_stage
+module if_stage import riscv_cpu_pkg::*;
 #(
 ) (
   input  logic                   clk_i,
@@ -6,14 +6,16 @@ module if_stage
 
   // instruction cache interface
   //output logic                   instr_req_o,
-  //output logic            [31:0] instr_addr_o,
+  output logic            [31:0] instr_addr_o,
   //input  logic                   instr_gnt_i,
   //input  logic                   instr_rvalid_i,
   input  logic            [31:0] instr_rdata_i,
+  input  logic            [31:0] branch_addr_i,
 
   // Forwarding ports - control signals
   //input  logic                   clear_instr_valid_i,   // clear instruction valid bit in IF/ID pipe
   input  logic             [1:0] pc_mux_i,              // sel for pc multiplexer
+  input  logic            [31:0] boot_addr_i,
 
   // Output of IF Pipeline stage
   //output logic                   instr_valid_id_o,      // instruction in IF/ID pipeline is valid
@@ -31,7 +33,10 @@ module if_stage
   // PC selection mux
   always_comb begin
     unique case(pc_mux_i)
-      default:    pc_d = pc_q + 4;
+      PC_BOOT:    pc_d = boot_addr_i;
+      PC_NEXT:    pc_d = pc_q + 4;
+      PC_JMP:     pc_d = pc_q;
+      PC_BRANCH:  pc_d = branch_addr_i;
     endcase
   end
 
