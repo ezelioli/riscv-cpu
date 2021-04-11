@@ -185,13 +185,13 @@ module core
     .mem_data_o        (wb_mem_data),
     .taken_o           (),
 
-    .data_req_o        (),
-    .data_gnt_i        (),
-    .data_rvalid_i     (),
-    .data_addr_o       (),
-    .data_we_o         (),
-    .data_wdata_o      (),
-    .data_rdata_i      ()
+    .data_req_o        (data_req_o),
+    .data_gnt_i        (data_gnt_i),
+    .data_rvalid_i     (data_rvalid_i),
+    .data_addr_o       (data_addr_o),
+    .data_we_o         (data_we_o),
+    .data_wdata_o      (data_wdata_o),
+    .data_rdata_i      (data_rdata_i)
   );
   
 
