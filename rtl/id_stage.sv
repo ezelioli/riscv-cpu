@@ -48,6 +48,7 @@ module id_stage import riscv_cpu_pkg::*;
   ////////////////////////////////
   logic data_a_mux;
   logic data_b_mux;
+  logic imm_mux;
   logic reg_raddr_a;
   logic reg_raddr_b;
   logic reg_waddr_a;
@@ -82,10 +83,11 @@ module id_stage import riscv_cpu_pkg::*;
     .instr_i        (instr_rdata_i),
     .data_a_mux_o   (data_a_mux),
     .data_b_mux_o   (data_b_mux),
+    .imm_mux_o      (imm_mux),
     .alu_op_o       (alu_op),
     .reg_raddr_a_o  (reg_raddr_a),
     .reg_raddr_b_o  (reg_raddr_b),
-    .imm_o          (imm)
+    .pc_mux_o       ()
   );
 
   assign raddr_a          = reg_raddr_a;
@@ -98,7 +100,12 @@ module id_stage import riscv_cpu_pkg::*;
   assign pc_id_d          = pc_id_i;
   assign instr_rdata_d    = instr_rdata_i;
   assign alu_op_d         = alu_op;
-  
+
+  always_comb begin
+    unique case(imm_mux)
+      IMM_Z:  imm = '0;
+      IMM_I:  imm = instr_i[IMM_MSB:IMM_LSB];
+  end
 
   always_comb begin
     unique case(data_a_mux)

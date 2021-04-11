@@ -15,12 +15,35 @@ package riscv_cpu_pkg;
   parameter PC_BRANCH  = 2'b11;
 
   // INSTRUCTION FIELDS //
+  parameter OP_MSB     = 6;
+  parameter OP_LSB     = 0;
   parameter REG_S1_MSB = 19;
   parameter REG_S1_LSB = 15;
   parameter REG_S2_MSB = 24;
   parameter REG_S2_LSB = 20;
   parameter IMM_MSB    = 31;
   parameter IMM_LSB    = 20;
+
+  // OPCODES //
+  parameter OPCODE_SYSTEM    = 7'h73;
+  parameter OPCODE_FENCE     = 7'h0f;
+  parameter OPCODE_OP        = 7'h33;
+  parameter OPCODE_OPIMM     = 7'h13;
+  parameter OPCODE_STORE     = 7'h23;
+  parameter OPCODE_LOAD      = 7'h03;
+  parameter OPCODE_BRANCH    = 7'h63;
+  parameter OPCODE_JALR      = 7'h67;
+  parameter OPCODE_JAL       = 7'h6f;
+  parameter OPCODE_AUIPC     = 7'h17;
+  parameter OPCODE_LUI       = 7'h37;
+  parameter OPCODE_OP_FP     = 7'h53;
+  parameter OPCODE_OP_FMADD  = 7'h43;
+  parameter OPCODE_OP_FNMADD = 7'h4f;
+  parameter OPCODE_OP_FMSUB  = 7'h47;
+  parameter OPCODE_OP_FNMSUB = 7'h4b;
+  parameter OPCODE_STORE_FP  = 7'h27;
+  parameter OPCODE_LOAD_FP   = 7'h07;
+  parameter OPCODE_AMO       = 7'h2F;
 
   // ALU OPERANDS MUX //
   parameter OP_A_REG   = 0;
@@ -30,6 +53,10 @@ package riscv_cpu_pkg;
 
   // ALU operations //
   parameter ALU_OP_WIDTH = 7;
+
+  // IMMEDIATE MUX //
+  parameter IMM_Z = 1'b0;
+  parameter IMM_I = 1'b1;
 
 typedef enum logic [ALU_OP_WIDTH-1:0]
 {
