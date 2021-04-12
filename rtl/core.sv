@@ -41,6 +41,7 @@ module core
   logic [1:0]            if_cu_pc_mux;
   logic                  if_branch_taken;
   logic [31:0]           if_branch_addr;
+  logic                  if_jal_op;
 
   // ID signals
   logic [31:0]           id_instr_rdata;
@@ -56,7 +57,7 @@ module core
   logic [DATA_WIDTH-1:0] ex_data_b;
   logic                  ex_alu_op;
   logic [31:0]           ex_branch_addr;
-  logic                  ex_jmp_mux;
+  logic [1:0]            ex_branch_mux;
 
   // MEM signals
   logic [31:0]           mem_instr_rdata;
@@ -66,7 +67,7 @@ module core
   logic [DATA_WIDTH-1:0] mem_alu_result;
   logic [CSR_WIDTH-1:0]  mem_alu_csr;
   logic [31:0]           mem_branch_addr;
-  logic                  mem_jmp_mux;
+  logic [1:0]            mem_branch_mux;
 
   // WB signals
   logic [31:0]           wb_instr_rdata;
@@ -99,6 +100,8 @@ module core
     .instr_rdata_i     (if_instr_rdata),
     .instr_addr_o      (instr_addr_o),
     .branch_addr_i     (if_branch_addr),
+
+    .jal_op_i          (if_jal_op),
 
     .cu_pc_mux_i       (if_cu_pc_mux),
     .branch_taken_i    (if_branch_taken),
@@ -136,7 +139,8 @@ module core
     .pc_id_o          (ex_pc),
     .instr_rdata_o    (ex_instr_rdata),
     .branch_addr_o    (ex_branch_addr),
-    .jmp_mux_o        (ex_jmp_mux)
+    .branch_mux_o     (ex_branch_mux),
+    .jal_op_o         (if_jal_op)
   );
 
   /////////////////////////////////////////////////////
@@ -158,7 +162,7 @@ module core
     .data_b_i          (ex_data_b),
     .alu_op_i          (ex_alu_op),
     .branch_addr_i     (ex_branch_addr),
-    .jmp_mux_i         (ex_jmp_mux),
+    .branch_mux_i      (ex_branch_mux),
 
     .pc_ex_o           (mem_pc),
     .instr_rdata_o     (mem_instr_rdata),
@@ -167,7 +171,7 @@ module core
     .alu_result_o      (mem_alu_result),
     .csr_o             (mem_alu_csr),
     .branch_addr_o     (mem_branch_addr),
-    .jmp_mux_o         (mem_jmp_mux)
+    .branch_mux_o      (mem_branch_mux)
   );
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -191,7 +195,7 @@ module core
     .alu_result_i      (mem_alu_result),
     .alu_csr_i         (mem_alu_csr),
     .branch_addr_i     (mem_branch_addr),
-    .jmp_mux_i         (mem_jmp_mux),
+    .jmp_mux_i         (mem_branch_mux),
 
     .instr_rdata_o     (wb_instr_rdata),
     .alu_result_o      (wb_alu_result),

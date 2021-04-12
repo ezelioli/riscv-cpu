@@ -14,12 +14,16 @@ package riscv_cpu_pkg;
   parameter CU_PC_NEXT    = 2'b10;
 
   // BRANCH UNIT PC MUX //
-  parameter BU_PC_NEXT = 1'b0;
-  parameter BU_PC_JMP  = 1'b1;
+  parameter BU_MUX_WIDTH = 2; 
+  parameter BU_PC_NEXT   = 2'b00;
+  parameter BU_PC_JAL    = 2'b01;
+  parameter BU_PC_BRANCH = 2'b10;
 
   // INSTRUCTION FIELDS //
   parameter OP_MSB     = 6;
   parameter OP_LSB     = 0;
+  parameter FUNCT_MSB  = 14;
+  parameter FUNCT_LSB  = 12;
   parameter REG_S1_MSB = 19;
   parameter REG_S1_LSB = 15;
   parameter REG_S2_MSB = 24;
@@ -30,25 +34,26 @@ package riscv_cpu_pkg;
   parameter JAL_LSB    = 7;
 
   // OPCODES //
-  parameter OPCODE_SYSTEM    = 7'h73;
-  parameter OPCODE_FENCE     = 7'h0f;
-  parameter OPCODE_OP        = 7'h33;
-  parameter OPCODE_OPIMM     = 7'h13;
-  parameter OPCODE_STORE     = 7'h23;
-  parameter OPCODE_LOAD      = 7'h03;
-  parameter OPCODE_BRANCH    = 7'h63;
-  parameter OPCODE_JALR      = 7'h67;
-  parameter OPCODE_JAL       = 7'h6f;
-  parameter OPCODE_AUIPC     = 7'h17;
   parameter OPCODE_LUI       = 7'h37;
-  parameter OPCODE_OP_FP     = 7'h53;
-  parameter OPCODE_OP_FMADD  = 7'h43;
-  parameter OPCODE_OP_FNMADD = 7'h4f;
-  parameter OPCODE_OP_FMSUB  = 7'h47;
-  parameter OPCODE_OP_FNMSUB = 7'h4b;
-  parameter OPCODE_STORE_FP  = 7'h27;
-  parameter OPCODE_LOAD_FP   = 7'h07;
-  parameter OPCODE_AMO       = 7'h2F;
+  parameter OPCODE_AUIPC     = 7'h17;
+  parameter OPCODE_JAL       = 7'h6F;
+  parameter OPCODE_JALR      = 7'h67;
+  parameter OPCODE_BRANCH    = 7'h63;
+  parameter OPCODE_LOAD      = 7'h03;
+  parameter OPCODE_STORE     = 7'h23;
+  parameter OPCODE_OP_IMM    = 7'h13;
+  parameter OPCODE_OP        = 7'h33;
+  parameter OPCODE_MISC_MEM  = 7'h0F;
+  parameter OPCODE_SYSTEM    = 7'h73;
+
+  // FUNCT3 FIELD //
+  // branch opcode
+  parameter BEQ  = 3'b000;
+  parameter BNE  = 3'b001;
+  parameter BLT  = 3'b100;
+  parameter BGE  = 3'b101;
+  parameter BLTU = 3'b110;
+  parameter BGEU = 3'b111;
 
   // ALU OPERANDS MUX //
   parameter OP_A_REG   = 0;
@@ -62,6 +67,18 @@ package riscv_cpu_pkg;
   // IMMEDIATE MUX //
   parameter IMM_Z = 1'b0;
   parameter IMM_I = 1'b1;
+
+  // CSR BIT FIELDS //
+  parameter CSR_CARRY    = 0;
+  parameter CSR_OVERFLOW = 1;
+  parameter CSR_SIGN     = 2;
+  parameter CSR_ZERO     = 3;
+
+  // JMP MUX IN EX STAGE // branch_mux signal
+  parameter NO_BRANCH         = 2'b00;
+  parameter BRANCH_IF_EQUAL   = 2'b01;
+  parameter BRANCH_IF_EQUAL_N = 2'b10;
+  parameter BRANC_IF_SIGN     = 2'b11;
 
 typedef enum logic [ALU_OP_WIDTH-1:0]
 {
@@ -149,3 +166,4 @@ typedef enum logic [ALU_OP_WIDTH-1:0]
 } alu_opcode_e;
 
 endpackage : riscv_cpu_pkg
+  parameter OPCODE_LOAD      = 7'h03;

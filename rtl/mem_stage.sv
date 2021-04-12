@@ -11,7 +11,7 @@ module mem_stage import riscv_cpu_pkg::*;
   input  logic  [DATA_WIDTH-1:0] data_b_i,
   input  logic  [DATA_WIDTH-1:0] alu_result_i,
   input  logic   [CSR_WIDTH-1:0] alu_csr_i,
-  input  logic                   jmp_mux_i,
+  input  logic             [1:0] branch_mux_i,
   input  logic            [31:0] branch_addr_i,
   
   // Output of MEM pipeline stage
@@ -53,7 +53,7 @@ module mem_stage import riscv_cpu_pkg::*;
   logic [31:0] b_pc;
   logic [CSR_WIDTH-1:0] b_csr;
   logic b_taken;
-  logic b_jmp_mux;
+  logic [1:0] b_branch_mux;
 
   load_store_unit_simple #(
   ) load_store_unit_simple_i (
@@ -81,13 +81,13 @@ module mem_stage import riscv_cpu_pkg::*;
     .rst_ni             (rst_ni),
     .pc_i               (b_pc),
     .csr_i              (b_csr),
-    .jmp_mux_i          (b_jmp_mux),
+    .branch_mux_i       (b_branch_mux),
     .taken_o            (b_taken)
   );
 
   assign b_pc          = pc_i;
   assign b_csr         = csr_i;
-  assign b_jmp_mux     = jmp_mux_i;
+  assign b_branch_mux  = branch_mux_i;
 
   assign instr_rdata_d  = instr_rdata_i;
   assign alu_result_d   = alu_result_i;

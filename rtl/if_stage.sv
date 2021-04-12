@@ -12,6 +12,8 @@ module if_stage import riscv_cpu_pkg::*;
   input  logic            [31:0] instr_rdata_i,
   input  logic            [31:0] branch_addr_i,
 
+  input  logic                   jal_op_i,
+
   // Forwarding ports - control signals
   //input  logic                   clear_instr_valid_i,   // clear instruction valid bit in IF/ID pipe
   input  logic             [1:0] cu_pc_mux_i,             // sel for control unit pc multiplexer
@@ -32,14 +34,25 @@ module if_stage import riscv_cpu_pkg::*;
   logic      [31:0] instr_reg_q;
   logic      [31:0] instr_reg_d;
 
-  logic             bu_pc_mux;
+  logic  [BU_MUX_WIDTH-1:0] bu_pc_mux;
+  logic                     bu_jal_op;
 
   branch_unit branch_unit_i (
     .clk_i            (clk_i),
     .rst_ni           (rst_ni),
     .branch_taken_i   (branch_taken_i),
+    .jal_op_i         (bu_jal_op),
     .pc_mux_o         (bu_pc_mux)
   );
+
+  assign bu_jal_op = jal_op_i;
+
+  /*always_comb begin // check if fetched instruction is JAL or JALR
+    bu_jal_op = 1'b0;
+    if(instr_reg_q[OP_MSB:OP_LSB] == OPCODE_JAL || instr_reg_q[OP_MSB:OP_LSB] == OPCODE_JALR) begin
+      bu_jal_op = 1'b1;
+    end
+  end*/
 
   // PC CONTROL UNIT MUX
   always_comb begin
@@ -76,6 +89,6 @@ module if_stage import riscv_cpu_pkg::*;
   end
 
   assign pc_if_o          = pc_old_q;
-  assign instr_rdata_id_o = instr_req_q;
+  assign instr_rdata_id_o = instr_reg_q;
 
 endmodule
