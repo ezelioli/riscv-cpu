@@ -10,6 +10,8 @@ module ex_stage import riscv_cpu_pkg::*;
   input  logic  [DATA_WIDTH-1:0] data_a_i,
   input  logic  [DATA_WIDTH-1:0] data_b_i,
   input  logic                   alu_op_i,
+  input  logic            [31:0] branch_addr_i,
+  input  logic                   jmp_mux_i,
   
   // Output of EX pipeline stage
   output logic            [31:0] pc_ex_o,
@@ -17,7 +19,9 @@ module ex_stage import riscv_cpu_pkg::*;
   output logic  [DATA_WIDTH-1:0] data_a_o,
   output logic  [DATA_WIDTH-1:0] data_b_o,
   output logic  [DATA_WIDTH-1:0] alu_result_o,
-  output logic   [CSR_WIDTH-1:0] csr_o
+  output logic   [CSR_WIDTH-1:0] csr_o,
+  output logic            [31:0] branch_addr_o,
+  output logic                   jmp_mux_o
 );
   
   logic [31:0] pc_ex_d;
@@ -32,6 +36,10 @@ module ex_stage import riscv_cpu_pkg::*;
   logic [DATA_WIDTH-1:0] alu_result_q;
   logic [CSR_WIDTH-1:0] csr_d;
   logic [CSR_WIDTH-1:0] csr_q;
+  logic [31:0] branch_addr_d;
+  logic [31:0] branch_addr_q;
+  logic                 jmp_mux_d;
+  logic                 jmp_mux_q;
 
   ////////////////////////////////
   ////          ALU           ////
@@ -57,6 +65,8 @@ module ex_stage import riscv_cpu_pkg::*;
   assign data_b_d       = data_b_i;
   assign alu_result_d   = alu_result;
   assign csr_d          = alu_csr;
+  assign branch_addr_d  = branch_addr_i;
+  assign jmp_mux_d      = jmp_mux_i;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
@@ -66,6 +76,8 @@ module ex_stage import riscv_cpu_pkg::*;
       data_b_q          <= 0';
       alu_result_q      <= 0';
       csr_q             <= 0';
+      branch_addr_q     <= 0';
+      jmp_mux_q         <= 0';
     end else begin
       pc_ex_q           <= pc_ex_d;
       instr_rdata_q     <= instr_rdata_d;
@@ -73,6 +85,8 @@ module ex_stage import riscv_cpu_pkg::*;
       data_b_q          <= data_b_d;
       alu_result_q      <= alu_result_d;
       csr_q             <= csr_d;
+      branch_addr_q     <= branch_addr_d;
+      jmp_mux_q         <= jmp_mux_d;
     end
   end
 
@@ -82,5 +96,7 @@ module ex_stage import riscv_cpu_pkg::*;
   assign data_b_o       = data_b_q;
   assign alu_result_o   = alu_result_q;
   assign csr_o          = csr_q;
+  assign branch_addr_o  = branch_addr_q;
+  assign jmp_mux_o      = jmp_mux_q;
 
 endmodule : ex_stage

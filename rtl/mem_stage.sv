@@ -11,12 +11,16 @@ module mem_stage import riscv_cpu_pkg::*;
   input  logic  [DATA_WIDTH-1:0] data_b_i,
   input  logic  [DATA_WIDTH-1:0] alu_result_i,
   input  logic   [CSR_WIDTH-1:0] alu_csr_i,
+  input  logic                   jmp_mux_i,
+  input  logic            [31:0] branch_addr_i,
   
   // Output of MEM pipeline stage
   output logic            [31:0] instr_rdata_o,
   output logic  [DATA_WIDTH-1:0]      alu_result_o,
   output logic  [DATA_WIDTH-1:0]      mem_data_o,
   output logic                        taken_o,
+
+  output logic            [31:0] branch_addr_o,
 
   // Signals reserved for data memory interface
   output logic                        data_req_o,
@@ -46,9 +50,10 @@ module mem_stage import riscv_cpu_pkg::*;
   logic [DATA_WIDTH-1:0] lsu_operand_b;
 
   // branch unit signals
-  logic [31:0] bu_pc;
-  logic [CSR_WIDTH-1:0] bu_csr;
-  logic bu_taken;
+  logic [31:0] b_pc;
+  logic [CSR_WIDTH-1:0] b_csr;
+  logic b_taken;
+  logic b_jmp_mux;
 
   load_store_unit_simple #(
   ) load_store_unit_simple_i (
@@ -70,17 +75,19 @@ module mem_stage import riscv_cpu_pkg::*;
     .operand_b_mem_i          (lsu_operand_b)
   );
 
-  branch_unit #(
-  ) branch_unit_i (
+  mem_branch_ctl #(
+  ) mem_branch_ctl_i (
     .clk_i              (clk_i),
     .rst_ni             (rst_ni),
-    .pc_i               (bu_pc),
-    .csr_i              (bu_csr),
-    .taken_o            (bu_taken)
+    .pc_i               (b_pc),
+    .csr_i              (b_csr),
+    .jmp_mux_i          (b_jmp_mux),
+    .taken_o            (b_taken)
   );
 
-  assign bu_pc          = pc_i;
-  assign bu_csr         = csr_i;
+  assign b_pc          = pc_i;
+  assign b_csr         = csr_i;
+  assign b_jmp_mux     = jmp_mux_i;
 
   assign instr_rdata_d  = instr_rdata_i;
   assign alu_result_d   = alu_result_i;
@@ -102,6 +109,8 @@ module mem_stage import riscv_cpu_pkg::*;
   assign alu_result_o   = alu_result_q;
   assign mem_data_o     = mem_data_q;
 
-  assign taken_o        = bu_taken;
+  assign branch_addr_o  = branch_addr_i;
+
+  assign taken_o        = b_taken;
 
 endmodule

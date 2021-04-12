@@ -38,7 +38,9 @@ module core
 
   // IF signals
   logic [31:0]           if_instr_rdata;
-  logic [1:0]            if_pc_mux;
+  logic [1:0]            if_cu_pc_mux;
+  logic                  if_branch_taken;
+  logic [31:0]           if_branch_addr;
 
   // ID signals
   logic [31:0]           id_instr_rdata;
@@ -53,6 +55,8 @@ module core
   logic [DATA_WIDTH-1:0] ex_data_a;
   logic [DATA_WIDTH-1:0] ex_data_b;
   logic                  ex_alu_op;
+  logic [31:0]           ex_branch_addr;
+  logic                  ex_jmp_mux;
 
   // MEM signals
   logic [31:0]           mem_instr_rdata;
@@ -61,6 +65,8 @@ module core
   logic [DATA_WIDTH-1:0] mem_data_b;
   logic [DATA_WIDTH-1:0] mem_alu_result;
   logic [CSR_WIDTH-1:0]  mem_alu_csr;
+  logic [31:0]           mem_branch_addr;
+  logic                  mem_jmp_mux;
 
   // WB signals
   logic [31:0]           wb_instr_rdata;
@@ -72,7 +78,6 @@ module core
 
   
   assign if_instr_rdata = instr_rdata_i;
-  assign if_pc_mux      = PC_BOOT;
 
   assign id_we_a    = wb_we_a;
   assign id_wdata_a = wb_wdata_a;
@@ -86,16 +91,17 @@ module core
   //  |___|_|     |____/ |_/_/   \_\____|_____|   //
   //                                              //
   //////////////////////////////////////////////////
-  if_stage
-  #(
+  if_stage #(
   ) if_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
 
     .instr_rdata_i     (if_instr_rdata),
     .instr_addr_o      (instr_addr_o),
+    .branch_addr_i     (if_branch_addr),
 
-    .pc_mux_i          (if_pc_mux),
+    .cu_pc_mux_i       (if_cu_pc_mux),
+    .branch_taken_i    (if_branch_taken),
     .boot_addr_i       (boot_addr_i),
 
     .instr_rdata_id_o  (id_instr_rdata),
@@ -110,8 +116,7 @@ module core
   //  |___|____/  |____/ |_/_/   \_\____|_____|  //
   //                                             //
   /////////////////////////////////////////////////
-  id_stage
-  #(
+  id_stage #(
   ) id_stage_i (
     .clk_i            (clk_i),
     .rst_ni           (rst_ni),
@@ -123,11 +128,15 @@ module core
     .wdata_a_i        (id_wdata_a),
     .we_a_i           (id_we_a),
 
+    .pc_mux_o         (if_cu_pc_mux),
+
     .data_a_o         (ex_data_a),
     .data_b_o         (ex_data_b),
     .alu_op_o         (ex_alu_op),
     .pc_id_o          (ex_pc),
-    .instr_rdata_o    (ex_instr_rdata)
+    .instr_rdata_o    (ex_instr_rdata),
+    .branch_addr_o    (ex_branch_addr),
+    .jmp_mux_o        (ex_jmp_mux)
   );
 
   /////////////////////////////////////////////////////
@@ -138,8 +147,7 @@ module core
   //  |_____/_/\_\ |____/ |_/_/   \_\____|_____|     //
   //                                                 //
   /////////////////////////////////////////////////////
-  ex_stage
-  #(
+  ex_stage #(
   ) ex_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
@@ -149,13 +157,17 @@ module core
     .data_a_i          (ex_data_a),
     .data_b_i          (ex_data_b),
     .alu_op_i          (ex_alu_op),
+    .branch_addr_i     (ex_branch_addr),
+    .jmp_mux_i         (ex_jmp_mux),
 
     .pc_ex_o           (mem_pc),
     .instr_rdata_o     (mem_instr_rdata),
     .data_a_o          (mem_data_a),
     .data_b_o          (mem_data_b),
     .alu_result_o      (mem_alu_result),
-    .csr_o             (mem_alu_csr)
+    .csr_o             (mem_alu_csr),
+    .branch_addr_o     (mem_branch_addr),
+    .jmp_mux_o         (mem_jmp_mux)
   );
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -167,8 +179,7 @@ module core
   //                                                                                    //
   ////////////////////////////////////////////////////////////////////////////////////////
 
-  mem_stage
-  #(
+  mem_stage #(
   ) mem_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
@@ -179,11 +190,14 @@ module core
     .data_b_i          (mem_data_b),
     .alu_result_i      (mem_alu_result),
     .alu_csr_i         (mem_alu_csr),
+    .branch_addr_i     (mem_branch_addr),
+    .jmp_mux_i         (mem_jmp_mux),
 
     .instr_rdata_o     (wb_instr_rdata),
     .alu_result_o      (wb_alu_result),
     .mem_data_o        (wb_mem_data),
-    .taken_o           (),
+    .branch_addr_o     (if_branch_addr),
+    .taken_o           (if_branch_taken),
 
     .data_req_o        (data_req_o),
     .data_gnt_i        (data_gnt_i),
@@ -198,13 +212,12 @@ module core
   /////////////////////////////////////////////////////
   //   _  _  ____   ____ _____  _    ____ _____      //
   //  | || ||  __| | ___|_   _|/ \  / ___| ____|     //
-  //  | || || |__|  \___ \ | | / _ \| |  _|  _|       //
+  //  | || || |__| \___ \ | | / _ \| |  _|  _|       //
   //  | || || |  |  ___) || |/ ___ \ |_| | |___      //
   //  |____||____| |____/ |_/_/   \_\____|_____|     //
   //                                                 //
   /////////////////////////////////////////////////////
-  wb_stage
-  #(
+  wb_stage #(
   ) wb_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),

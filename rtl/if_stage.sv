@@ -2,7 +2,7 @@ module if_stage import riscv_cpu_pkg::*;
 #(
 ) (
   input  logic                   clk_i,
-  input  logic                   rstn_i,
+  input  logic                   rst_ni,
 
   // instruction cache interface
   //output logic                   instr_req_o,
@@ -14,15 +14,17 @@ module if_stage import riscv_cpu_pkg::*;
 
   // Forwarding ports - control signals
   //input  logic                   clear_instr_valid_i,   // clear instruction valid bit in IF/ID pipe
-  input  logic             [1:0] pc_mux_i,              // sel for pc multiplexer
+  input  logic             [1:0] cu_pc_mux_i,             // sel for control unit pc multiplexer
+  input  logic                   branch_taken_i,
   input  logic            [31:0] boot_addr_i,
 
   // Output of IF Pipeline stage
   //output logic                   instr_valid_id_o,      // instruction in IF/ID pipeline is valid
-  output logic            [31:0] instr_rdata_id_o,      // read instruction is sampled and sent to ID stage for decoding
+  output logic            [31:0] instr_rdata_id_o,        // read instruction is sampled and sent to ID stage for decoding
   output logic            [31:0] pc_if_o
 );
-
+  
+  logic      [31:0] next_addr;
   logic      [31:0] pc_q;
   logic      [31:0] pc_d;
   logic      [31:0] pc_old_q;
@@ -30,13 +32,30 @@ module if_stage import riscv_cpu_pkg::*;
   logic      [31:0] instr_reg_q;
   logic      [31:0] instr_reg_d;
 
-  // PC selection mux
+  logic             bu_pc_mux;
+
+  branch_unit branch_unit_i (
+    .clk_i            (clk_i),
+    .rst_ni           (rst_ni),
+    .branch_taken_i   (branch_taken_i),
+    .pc_mux_o         (bu_pc_mux)
+  );
+
+  // PC CONTROL UNIT MUX
   always_comb begin
-    unique case(pc_mux_i)
-      PC_BOOT:    pc_d = boot_addr_i;
-      PC_NEXT:    pc_d = pc_q + 4;
-      PC_JMP:     pc_d = pc_q;
-      PC_BRANCH:  pc_d = branch_addr_i;
+    unique case(cu_pc_mux_i)
+      CU_PC_BOOT:     next_addr = boot_addr_i;
+      CU_PC_STALL:    next_addr = pc_q;
+      CU_PC_NEXT:     next_addr = pc_q + 4;
+      default:        next_addr = pc_q + 4;
+    endcase
+  end
+
+  // PC BRANCH UNIT MUX
+  always_comb begin
+    unique case(bu_pc_mux)
+      BU_PC_NEXT:    pc_d = next_addr;
+      BU_PC_JMP:     pc_d = branch_addr_i;
     endcase
   end
 
@@ -44,8 +63,8 @@ module if_stage import riscv_cpu_pkg::*;
   assign instr_reg_d  = instr_rdata_i;
 
   // registers of IF pipeline stage
-  always_ff @(posedge clk_i or negedge rstn_i) begin
-    if(~rstn_i) begin
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if(~rst_ni) begin
       pc_q        <= 0';
       pc_old_q    <= 0';
       instr_reg_q <= 0';

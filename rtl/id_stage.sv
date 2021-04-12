@@ -13,13 +13,16 @@ module id_stage import riscv_cpu_pkg::*;
   input  logic                   we_a_i,
 
   // Control signals
+  output logic             [1:0] pc_mux_o,
 
   // Output of ID pipeline stage
   output logic  [DATA_WIDTH-1:0] data_a_o,
   output logic  [DATA_WIDTH-1:0] data_b_o,
   output logic                   alu_op_o,
   output logic            [31:0] pc_id_o,
-  output logic            [31:0] instr_rdata_o
+  output logic            [31:0] instr_rdata_o,
+  output logic            [31:0] branch_addr_o,
+  output logic                   jmp_mux_o
 );
 
   ////////////////////////////////
@@ -62,6 +65,10 @@ module id_stage import riscv_cpu_pkg::*;
   logic [31:0] pc_id_q;
   logic [31:0] instr_rdata_d;
   logic [31:0] instr_rdata_q;
+  logic [31:0] branch_addr_d;
+  logic [31:0] branch_addr_q;
+  logic        jmp_mux_d;
+  logic        jmp_mux_q;
 
   register_file #(
   ) register_file_i (
@@ -87,7 +94,8 @@ module id_stage import riscv_cpu_pkg::*;
     .alu_op_o       (alu_op),
     .reg_raddr_a_o  (reg_raddr_a),
     .reg_raddr_b_o  (reg_raddr_b),
-    .pc_mux_o       ()
+    .pc_mux_o       (pc_mux_o),
+    .jmp_mux_o      (jmp_mux)
   );
 
   assign raddr_a          = reg_raddr_a;
@@ -100,6 +108,9 @@ module id_stage import riscv_cpu_pkg::*;
   assign pc_id_d          = pc_id_i;
   assign instr_rdata_d    = instr_rdata_i;
   assign alu_op_d         = alu_op;
+  assign jmp_mux_d        = jmp_mux;
+
+  assign branch_addr_d    = instr_i[JAL_MSB:JAL_LSB];
 
   always_comb begin
     unique case(imm_mux)
@@ -128,12 +139,16 @@ module id_stage import riscv_cpu_pkg::*;
       alu_op_q      <= 0';
       pc_id_q       <= 0';
       instr_rdata_q <= 0';
+      jmp_mux_q     <= 0';
+      branch_addr_q <= 0';
     end else begin
       data_a_q      <= data_a_d;
       data_b_q      <= data_b_d;
       alu_op_q      <= alu_op_d;
       pc_id_q       <= pc_id_d;
       instr_rdata_q <= instr_rdata_d;
+      jmp_mux_q     <= jmp_mux_d;
+      branch_addr_q <= branch_addr_d;
     end
   end
 
@@ -143,6 +158,8 @@ module id_stage import riscv_cpu_pkg::*;
   assign alu_op_o      = alu_op_q;
   assign pc_id_o       = pc_id_q;
   assign instr_rdata_o = instr_rdata_q;
+  assign branch_addr_o = branch_addr_q;
+  assign jmp_mux_o     = jmp_mux_q;
 
 
 endmodule

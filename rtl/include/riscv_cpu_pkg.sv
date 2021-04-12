@@ -8,11 +8,14 @@ package riscv_cpu_pkg;
 
   parameter CSR_WIDTH  = 16;
 
-  // PC MUX //
-  parameter PC_BOOT    = 2'b00;
-  parameter PC_NEXT    = 2'b01;
-  parameter PC_JMP     = 2'b10;
-  parameter PC_BRANCH  = 2'b11;
+  // CONTROL UNIT PC MUX //
+  parameter CU_PC_BOOT    = 2'b00;
+  parameter CU_PC_STALL   = 2'b01;
+  parameter CU_PC_NEXT    = 2'b10;
+
+  // BRANCH UNIT PC MUX //
+  parameter BU_PC_NEXT = 1'b0;
+  parameter BU_PC_JMP  = 1'b1;
 
   // INSTRUCTION FIELDS //
   parameter OP_MSB     = 6;
@@ -23,6 +26,8 @@ package riscv_cpu_pkg;
   parameter REG_S2_LSB = 20;
   parameter IMM_MSB    = 31;
   parameter IMM_LSB    = 20;
+  parameter JAL_MSB    = 31;
+  parameter JAL_LSB    = 7;
 
   // OPCODES //
   parameter OPCODE_SYSTEM    = 7'h73;
