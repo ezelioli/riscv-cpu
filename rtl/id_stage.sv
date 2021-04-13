@@ -17,13 +17,7 @@ module id_stage import riscv_cpu_pkg::*;
   output logic                   jal_op_o,
 
   // Output of ID pipeline stage
-  output logic  [DATA_WIDTH-1:0] data_a_o,
-  output logic  [DATA_WIDTH-1:0] data_b_o,
-  output logic                   alu_op_o,
-  output logic            [31:0] pc_id_o,
-  output logic            [31:0] instr_rdata_o,
-  output logic            [31:0] branch_addr_o,
-  output logic             [1:0] branch_mux_o
+  output id2ex_t                 ex_pipeline_o
 );
 
   ////////////////////////////////
@@ -38,39 +32,27 @@ module id_stage import riscv_cpu_pkg::*;
   logic                   we_a;
 
   ////////////////////////////////
-  ////     ALU INTERFACE      ////
-  ////////////////////////////////
-  logic [DATA_WIDTH-1:0] data_a_d;
-  logic [DATA_WIDTH-1:0] data_a_q;
-  logic [DATA_WIDTH-1:0] data_b_d;
-  logic [DATA_WIDTH-1:0] data_b_q;
-  logic                  alu_op_d;
-  logic                  alu_op_q;
-
-  ////////////////////////////////
   ////     CONTROL UNIT       ////
   ////////////////////////////////
   logic data_a_mux;
   logic data_b_mux;
   logic imm_mux;
+  logic alu_op;
   logic reg_raddr_a;
   logic reg_raddr_b;
-  logic reg_waddr_a;
-  logic reg_we_a;
-  logic alu_op;
-  logic alu_op;
-  logic [DATA_WIDTH-1:0] imm;
-  
+  logic reg_we;
+  logic [1:0] branch_mux;
+  logic [WDATA_MUX_WIDTH-1:0] wdata_mux;
 
-  logic [31:0] pc_id_d;
-  logic [31:0] pc_id_q;
-  logic [31:0] instr_rdata_d;
-  logic [31:0] instr_rdata_q;
-  logic [31:0] branch_addr_d;
-  logic [31:0] branch_addr_q;
-  logic [1:0]  branch_mux_d;
-  logic [1:0]  branch_mux_q;
-  logic [1:0]  branch_mux;
+  logic [DATA_WIDTH-1:0] data_a;
+  logic [DATA_WIDTH-1:0] data_b;
+  logic [ADDR_WIDTH-1:0] dest_reg;
+
+  id2mem_t mem_pipeline;
+  id2wb_t  tb_pipeline;
+
+  id2ex_t ex_pipeline_d;
+  id2ex_t ex_pipeline_q;
 
   register_file #(
   ) register_file_i (
@@ -96,8 +78,10 @@ module id_stage import riscv_cpu_pkg::*;
     .alu_op_o       (alu_op),
     .reg_raddr_a_o  (reg_raddr_a),
     .reg_raddr_b_o  (reg_raddr_b),
-    .pc_mux_o       (pc_mux_o),
+    .reg_we_o       (reg_we),
     .branch_mux_o   (branch_mux),
+    .wdata_mux_o    (wdata_mux),
+    .pc_mux_o       (pc_mux_o),
     .jal_op_o       (jal_op_o)
   );
 
@@ -108,12 +92,7 @@ module id_stage import riscv_cpu_pkg::*;
   assign wdata_a          = wdata_a_i;
   assign we_a             = we_a_i;
 
-  assign pc_id_d          = pc_id_i;
-  assign instr_rdata_d    = instr_rdata_i;
-  assign alu_op_d         = alu_op;
-  assign branch_mux_d        = branch_mux;
-
-  assign branch_addr_d    = instr_i[JAL_MSB:JAL_LSB];
+  assign dest_reg         = instr_rdata_i[REG_RD_MSB:REG_RD_LSB]; // always the same
 
   always_comb begin
     unique case(imm_mux)
@@ -123,46 +102,42 @@ module id_stage import riscv_cpu_pkg::*;
 
   always_comb begin
     unique case(data_a_mux)
-      OP_A_REG:   data_a_d = rdata_a;
-      OP_A_IMM:   data_a_d = imm;
+      OP_A_REG:   data_a = rdata_a;
+      OP_A_IMM:   data_a = imm;
     endcase
     unique case(data_b_mux)
-      OP_B_REG:    data_b_d = rdata_b;
-      OP_B_IMM:    data_b_d = imm;
+      OP_B_REG:    data_b = rdata_b;
+      OP_B_IMM:    data_b = imm;
     endcase
   end
 
+  assign mem_pipeline.pc            = pc_id_i;
+  assign mem_pipeline.branch_mux    = branch_mux;
+  assign mem_pipeline.branch_addr   = instr_i[JAL_MSB:JAL_LSB];  // to be changed to general address for all possible branches
+  assign mem_pipeline.data_a        = data_a;
+  assign mem_pipeline.data_b        = data_b;
 
+  assign wb_pipeline.reg_we         = reg_we;
+  assign wb_pipeline.wdata_mux      = wdata_mux;
+  assign wb_pipeline.dest_reg       = dest_reg;
+
+  assign ex_pipeline_d.alu_data_a   = data_a;
+  assign ex_pipeline_d.alu_data_b   = data_b;
+  assign ex_pipeline_d.alu_op       = alu_op;
+  assign ex_pipeline_d.mem_pipeline = mem_pipeline;
+  assign ex_pipeline_d.wb_pipeline  = wb_pipeline;
 
   // ID pipeline stage registers
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      data_a_q      <= 0';
-      data_a_q      <= 0';
-      alu_op_q      <= 0';
-      pc_id_q       <= 0';
-      instr_rdata_q <= 0';
-      jmp_mux_q     <= 0';
-      branch_mux_q  <= 0';
+      ex_pipeline_q <= 0';
     end else begin
-      data_a_q      <= data_a_d;
-      data_b_q      <= data_b_d;
-      alu_op_q      <= alu_op_d;
-      pc_id_q       <= pc_id_d;
-      instr_rdata_q <= instr_rdata_d;
-      jmp_mux_q     <= jmp_mux_d;
-      branch_mux_q  <= branch_mux_d;
+      ex_pipeline_o <= ex_pipeline_d;
     end
   end
 
   // OUPUT ASSIGNMENT
-  assign data_a_o      = data_a_q;
-  assign data_b_o      = data_b_q;
-  assign alu_op_o      = alu_op_q;
-  assign pc_id_o       = pc_id_q;
-  assign instr_rdata_o = instr_rdata_q;
-  assign branch_addr_o = branch_addr_q;
-  assign branch_mux_o  = branch_mux_q;
+  assign ex_pipeline_o = ex_pipeline_q;
 
 
 endmodule

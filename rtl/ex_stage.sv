@@ -5,98 +5,49 @@ module ex_stage import riscv_cpu_pkg::*;
   input  logic                   rst_ni,   // Asynchronous reset active low
 
   // EX pipeline stage interface
-  input  logic            [31:0] instr_rdata_i,
-  input  logic            [31:0] pc_ex_i,
-  input  logic  [DATA_WIDTH-1:0] data_a_i,
-  input  logic  [DATA_WIDTH-1:0] data_b_i,
-  input  logic                   alu_op_i,
-  input  logic            [31:0] branch_addr_i,
-  input  logic             [1:0] branch_mux_i,
+  input  id2ex_t                 ex_pipeline_i,
   
   // Output of EX pipeline stage
-  output logic            [31:0] pc_ex_o,
-  output logic            [31:0] instr_rdata_o,
-  output logic  [DATA_WIDTH-1:0] data_a_o,
-  output logic  [DATA_WIDTH-1:0] data_b_o,
-  output logic  [DATA_WIDTH-1:0] alu_result_o,
-  output logic   [CSR_WIDTH-1:0] csr_o,
-  output logic            [31:0] branch_addr_o,
-  output logic             [1:0] branch_mux_o
+  output ex2mem_t                mem_pipeline_o
 );
-  
-  logic [31:0] pc_ex_d;
-  logic [31:0] pc_ex_q;
-  logic [31:0] instr_rdata_d;
-  logic [31:0] instr_rdata_q;
-  logic [DATA_WIDTH-1:0] data_a_d;
-  logic [DATA_WIDTH-1:0] data_a_q;
-  logic [DATA_WIDTH-1:0] data_b_d;
-  logic [DATA_WIDTH-1:0] data_b_q;  
-  logic [DATA_WIDTH-1:0] alu_result_d;
-  logic [DATA_WIDTH-1:0] alu_result_q;
-  logic [CSR_WIDTH-1:0] csr_d;
-  logic [CSR_WIDTH-1:0] csr_q;
-  logic [31:0] branch_addr_d;
-  logic [31:0] branch_addr_q;
-  logic [1:0]            branch_mux_d;
-  logic [1:0]            branch_mux_q;
 
-  ////////////////////////////////
-  ////          ALU           ////
-  ////////////////////////////////
-  logic [DATA_WIDTH-1:0] data_a;
-  logic [DATA_WIDTH-1:0] data_b;
-  logic                  alu_op;
+  //internal signals
+  logic  [DATA_WIDTH-1:0] alu_data_a;
+  logic  [DATA_WIDTH-1:0] alu_data_b;
+  logic                   alu_op;
+
   logic [DATA_WIDTH-1:0] alu_result;
   logic [CSR_WIDTH-1:0]  alu_csr;
 
+  ex2mem_t mem_pipeline_d;
+  ex2mem_t mem_pipeline_q;
+
+  assign alu_data_a = ex_pipeline_i.alu_data_a;
+  assign alu_data_b = ex_pipeline_i.alu_data_b;
+  assign alu_op     = ex_pipeline_i.alu_op;
+
+  assign mem_pipeline_d.id_stage    = ex_pipeline_i.mem_pipeline;
+  assign mem_pipeline_d.alu_result  = alu_result;
+  assign mem_pipeline_d.alu_csr     = alu_csr;
+  assign mem_pipeline_d.wb_pipeline = ex_pipeline_i.wb_pipeline;
+
   alu #(
   ) alu_i (
-    .data_a_i     (data_a),
-    .data_b_i     (data_b),
+    .data_a_i     (alu_data_a),
+    .data_b_i     (alu_data_b),
     .op_i         (alu_op),
     .data_o       (alu_result),
     .csr_o        (alu_csr)
   );
 
-  assign pc_ex_d        = pc_ex_i;
-  assign instr_rdata_d  = instr_rdata_i;
-  assign data_a_d       = data_a_i;
-  assign data_b_d       = data_b_i;
-  assign alu_result_d   = alu_result;
-  assign csr_d          = alu_csr;
-  assign branch_addr_d  = branch_addr_i;
-  assign branch_mux_d      = branch_mux_i;
-
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      pc_ex_q           <= 0';
-      instr_rdata_q     <= 0';
-      data_a_q          <= 0';
-      data_b_q          <= 0';
-      alu_result_q      <= 0';
-      csr_q             <= 0';
-      branch_addr_q     <= 0';
-      branch_mux_q      <= 0';
+      mem_pipeline_q    <= 0';
     end else begin
-      pc_ex_q           <= pc_ex_d;
-      instr_rdata_q     <= instr_rdata_d;
-      data_a_q          <= data_a_d;
-      data_b_q          <= data_b_d;
-      alu_result_q      <= alu_result_d;
-      csr_q             <= csr_d;
-      branch_addr_q     <= branch_addr_d;
-      branch_mux_q      <= branch_mux_d;
+      mem_pipeline_q    <= mem_pipeline_d;
     end
   end
 
-  assign pc_ex_o        = pc_ex_q;
-  assign instr_rdata_o  = instr_rdata_q;
-  assign data_a_o       = data_a_q;
-  assign data_b_o       = data_b_q;
-  assign alu_result_o   = alu_result_q;
-  assign csr_o          = csr_q;
-  assign branch_addr_o  = branch_addr_q;
-  assign branch_mux_o   = branch_mux_q;
+  assign mem_pipeline_o = mem_pipeline_q;
 
 endmodule : ex_stage

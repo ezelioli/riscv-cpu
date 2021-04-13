@@ -28,6 +28,8 @@ package riscv_cpu_pkg;
   parameter REG_S1_LSB = 15;
   parameter REG_S2_MSB = 24;
   parameter REG_S2_LSB = 20;
+  parameter REG_RD_MSB = 11;
+  parameter REG_RD_LSB = 7;
   parameter IMM_MSB    = 31;
   parameter IMM_LSB    = 20;
   parameter JAL_MSB    = 31;
@@ -54,6 +56,16 @@ package riscv_cpu_pkg;
   parameter BGE  = 3'b101;
   parameter BLTU = 3'b110;
   parameter BGEU = 3'b111;
+  // load opcode
+  parameter LB   = 3'b000;
+  parameter LH   = 3'b001;
+  parameter LW   = 3'b010;
+  parameter LBU  = 3'b100;
+  parameter LHU  = 3'b101;
+  // store opcode
+  parameter SB = 3'b000;
+  parameter SH = 3'b001;
+  parameter SW = 3'b010;
 
   // ALU OPERANDS MUX //
   parameter OP_A_REG   = 0;
@@ -79,6 +91,11 @@ package riscv_cpu_pkg;
   parameter BRANCH_IF_EQUAL   = 2'b01;
   parameter BRANCH_IF_EQUAL_N = 2'b10;
   parameter BRANC_IF_SIGN     = 2'b11;
+
+  // REGISTER WDATA MUX IN WB STAGE //
+  parameter WDATA_MUX_WIDTH = 1;
+  parameter WDATA_ALU = 1'b0;
+  parameter WDATA_MEM = 1'b1;
 
 typedef enum logic [ALU_OP_WIDTH-1:0]
 {
@@ -165,5 +182,45 @@ typedef enum logic [ALU_OP_WIDTH-1:0]
 
 } alu_opcode_e;
 
+// type definition
+typedef struct {
+  logic                        reg_we;
+  logic  [WDATA_MUX_WIDTH-1:0] wdata_mux;
+  logic       [ADDR_WIDTH-1:0] dest_reg;
+} id2wb_t;
+
+typedef struct {
+  id2wb_t                      id_stage;
+  logic       [DATA_WIDTH-1:0] alu_result;
+} ex2wb_t;
+
+typedef struct {
+  ex2wb_t                      ex_stage;
+  logic       [DATA_WIDTH-1:0] mem_data;
+} mem2wb_t;
+
+typedef struct {
+  logic            [31:0] pc;
+  logic             [1:0] branch_mux;
+  logic            [31:0] branch_addr;
+  logic  [DATA_WIDTH-1:0] data_a;
+  logic  [DATA_WIDTH-1:0] data_b;
+} id2mem_t;
+
+typedef struct {
+  id2mem_t                id_stage;
+  logic  [DATA_WIDTH-1:0] alu_result;
+  logic   [CSR_WIDTH-1:0] alu_csr;
+  ex2wb_t                 wb_pipeline;
+} ex2mem_t;
+
+typedef struct {
+  logic  [DATA_WIDTH-1:0] alu_data_a;
+  logic  [DATA_WIDTH-1:0] alu_data_b;
+  logic                   alu_op;
+  id2mem_t                mem_pipeline;
+  ex2wb_t                 wb_pipeline;
+} id2ex_t;
+
+
 endpackage : riscv_cpu_pkg
-  parameter OPCODE_LOAD      = 7'h03;

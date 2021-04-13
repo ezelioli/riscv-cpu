@@ -51,38 +51,17 @@ module core
   logic                  id_we_a;
 
   // EX signals
-  logic [31:0]           ex_instr_rdata;
-  logic [31:0]           ex_pc;
-  logic [DATA_WIDTH-1:0] ex_data_a;
-  logic [DATA_WIDTH-1:0] ex_data_b;
-  logic                  ex_alu_op;
-  logic [31:0]           ex_branch_addr;
-  logic [1:0]            ex_branch_mux;
+  id2ex_t ex_pipeline;
 
   // MEM signals
-  logic [31:0]           mem_instr_rdata;
-  logic [31:0]           mem_pc;
-  logic [DATA_WIDTH-1:0] mem_data_a;
-  logic [DATA_WIDTH-1:0] mem_data_b;
-  logic [DATA_WIDTH-1:0] mem_alu_result;
-  logic [CSR_WIDTH-1:0]  mem_alu_csr;
-  logic [31:0]           mem_branch_addr;
-  logic [1:0]            mem_branch_mux;
+  ex2mem_t mem_pipeline;
 
   // WB signals
-  logic [31:0]           wb_instr_rdata;
-  logic [DATA_WIDTH-1:0] wb_alu_result;
-  logic [DATA_WIDTH-1:0] wb_mem_data;
-  logic [ADDR_WIDTH-1:0] wb_waddr_a;
-  logic [DATA_WIDTH-1:0] wb_wdata_a;
-  logic                  wb_we_a;
+  mem2wb_t wb_pipeline;
 
   
   assign if_instr_rdata = instr_rdata_i;
 
-  assign id_we_a    = wb_we_a;
-  assign id_wdata_a = wb_wdata_a;
-  assign id_waddr_a = wb_waddr_a;
 
   //////////////////////////////////////////////////
   //   ___ _____   ____ _____  _    ____ _____    //
@@ -132,15 +111,9 @@ module core
     .we_a_i           (id_we_a),
 
     .pc_mux_o         (if_cu_pc_mux),
+    .jal_op_o         (if_jal_op),
 
-    .data_a_o         (ex_data_a),
-    .data_b_o         (ex_data_b),
-    .alu_op_o         (ex_alu_op),
-    .pc_id_o          (ex_pc),
-    .instr_rdata_o    (ex_instr_rdata),
-    .branch_addr_o    (ex_branch_addr),
-    .branch_mux_o     (ex_branch_mux),
-    .jal_op_o         (if_jal_op)
+    .ex_pipeline_o    (ex_pipeline)
   );
 
   /////////////////////////////////////////////////////
@@ -156,22 +129,9 @@ module core
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
 
-    .instr_rdata_i     (ex_instr_rdata),
-    .pc_ex_i           (ex_pc),
-    .data_a_i          (ex_data_a),
-    .data_b_i          (ex_data_b),
-    .alu_op_i          (ex_alu_op),
-    .branch_addr_i     (ex_branch_addr),
-    .branch_mux_i      (ex_branch_mux),
+    .ex_pipeline_i     (ex_pipeline),
 
-    .pc_ex_o           (mem_pc),
-    .instr_rdata_o     (mem_instr_rdata),
-    .data_a_o          (mem_data_a),
-    .data_b_o          (mem_data_b),
-    .alu_result_o      (mem_alu_result),
-    .csr_o             (mem_alu_csr),
-    .branch_addr_o     (mem_branch_addr),
-    .branch_mux_o      (mem_branch_mux)
+    .mem_pipeline_o    (mem_pipeline)
   );
 
   ////////////////////////////////////////////////////////////////////////////////////////
@@ -188,18 +148,10 @@ module core
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
 
-    .instr_rdata_i     (mem_instr_rdata),
-    .pc_mem_i          (mem_pc),
-    .data_a_i          (mem_data_a),
-    .data_b_i          (mem_data_b),
-    .alu_result_i      (mem_alu_result),
-    .alu_csr_i         (mem_alu_csr),
-    .branch_addr_i     (mem_branch_addr),
-    .jmp_mux_i         (mem_branch_mux),
+    .mem_pipeline_i    (mem_pipeline),
 
-    .instr_rdata_o     (wb_instr_rdata),
-    .alu_result_o      (wb_alu_result),
-    .mem_data_o        (wb_mem_data),
+    .wb_pipeline_o     (wb_pipeline),
+
     .branch_addr_o     (if_branch_addr),
     .taken_o           (if_branch_taken),
 
@@ -226,11 +178,9 @@ module core
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
 
-    .instr_rdata_i     (wb_instr_rdata),
-    .alu_result_i      (wb_alu_result),
-    .mem_data_i        (wb_mem_data),
+    .wb_pipeline_i     (wb_pipeline),
 
-    .wdata_o           (wb_wdata_a),
-    .dest_reg_o        (wb_waddr_a),
-    .we_o              (wb_we_a)
+    .wdata_o           (id_wdata_a),
+    .dest_reg_o        (id_waddr_a),
+    .we_o              (id_we_a)
   );
