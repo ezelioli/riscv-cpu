@@ -14,24 +14,20 @@ module load_store_unit_simple import riscv_cpu_pkg::*;
   input  logic  [DATA_WIDTH-1:0] data_rdata_i
 
   // Signals from MEM stage
-  input  logic                   mem_req_i,        // data request                      -> from ex stage
+//  input  logic                   mem_req_i,        // data request                      -> from ex stage
   input  logic                   mem_we_i,         // write enable                      -> from ex stage
-  input  logic             [1:0] mem_data_type_i,  // Data type word, halfword, byte    -> from ex stage
+//  input  logic             [1:0] mem_data_type_i,  // Data type word, halfword, byte    -> from ex stage
   input  logic  [DATA_WIDTH-1:0] mem_wdata_i,      // data to write to memory           -> from ex stage
-  input  logic                   mem_load_event_i, // load event                        -> from ex stage
+//  input  logic                   mem_load_event_i, // load event                        -> from ex stage
   input  logic            [31:0] mem_addr_i,
   output logic  [DATA_WIDTH-1:0] mem_rdata_o,      // requested data                    -> to ex stage
 );
 
   assign data_addr_o  = mem_addr_i;
-  assign data_req_o   = mem_req_i;
   assign data_we_o    = mem_we_i;
+  assign data_wdata_o = mem_wdata_i;
+  assign data_req_o   = 1'b1;
 
   assign mem_rdata_o = data_rdata_i;
-
-  // data_wdata mux //
-  always_comb begin
-    data_wdata_o = mem_wdata_i;
-  end
 
 endmodule

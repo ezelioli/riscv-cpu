@@ -36,7 +36,7 @@ module id_stage import riscv_cpu_pkg::*;
   ////////////////////////////////
   logic data_a_mux;
   logic data_b_mux;
-  logic imm_mux;
+  logic [IMM_MUX_WIDTH-1:0] imm_mux;
   logic alu_op;
   logic reg_raddr_a;
   logic reg_raddr_b;
@@ -47,6 +47,10 @@ module id_stage import riscv_cpu_pkg::*;
   logic [DATA_WIDTH-1:0] data_a;
   logic [DATA_WIDTH-1:0] data_b;
   logic [ADDR_WIDTH-1:0] dest_reg;
+  logic [DATA_WIDTH-1:0] imm;
+
+  logic [DATA_WIDTH-1:0] mem_wdata;
+  logic                  mem_we;
 
   id2mem_t mem_pipeline;
   id2wb_t  tb_pipeline;
@@ -93,11 +97,14 @@ module id_stage import riscv_cpu_pkg::*;
   assign we_a             = we_a_i;
 
   assign dest_reg         = instr_rdata_i[REG_RD_MSB:REG_RD_LSB]; // always the same
+  assign mem_wdata        = data_b;
 
   always_comb begin
+    imm = 0';
     unique case(imm_mux)
       IMM_Z:  imm = '0;
-      IMM_I:  imm = instr_i[IMM_MSB:IMM_LSB];
+      IMM_I:  imm[IMM_NBITS-1:0] = instr_i[IMM_MSB:IMM_LSB]; // basic zero extension
+      IMM_STORE: imm[IMM_NBITS-1:0] = {instr_i[31:25], instr_i[11:7]};
   end
 
   always_comb begin
@@ -114,13 +121,14 @@ module id_stage import riscv_cpu_pkg::*;
   assign mem_pipeline.pc            = pc_id_i;
   assign mem_pipeline.branch_mux    = branch_mux;
   assign mem_pipeline.branch_addr   = instr_i[JAL_MSB:JAL_LSB];  // to be changed to general address for all possible branches
-  assign mem_pipeline.data_a        = data_a;
-  assign mem_pipeline.data_b        = data_b;
+  assign mem_pipeline.mem_wdata     = mem_wdata;
+  assign mem_pipeline.mem_we        = mem_we;
 
   assign wb_pipeline.reg_we         = reg_we;
   assign wb_pipeline.wdata_mux      = wdata_mux;
   assign wb_pipeline.dest_reg       = dest_reg;
 
+  assign ex_pipeline_d.imm          = imm;
   assign ex_pipeline_d.alu_data_a   = data_a;
   assign ex_pipeline_d.alu_data_b   = data_b;
   assign ex_pipeline_d.alu_op       = alu_op;

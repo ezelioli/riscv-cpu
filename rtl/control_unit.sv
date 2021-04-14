@@ -9,7 +9,7 @@ module control_unit import riscv_cpu_pkg::*;
   // pipelined control
   output logic                       data_a_mux_o,
   output logic                       data_b_mux_o,
-  output logic                       imm_mux_o,
+  output logic   [IMM_MUX_WIDTH-1:0] imm_mux_o,
   output logic                       alu_op_o,
   output logic      [ADDR_WIDTH-1:0] reg_raddr_a_o,
   output logic      [ADDR_WIDTH-1:0] reg_raddr_b_o,
@@ -59,6 +59,10 @@ module control_unit import riscv_cpu_pkg::*;
       OPCODE_LOAD:
         reg_we_o = 1'b1;
         wdata_mux_o = WDATA_MEM;
+        reg_raddr_a_o = instr_i[19:15]; // add parameters for these numbers
+        data_a_mux_o = OP_A_REG;
+        imm_mux_o = IMM_I;
+        alu_op_o = 0'; /// add operation between data_a and imm
 //        unique case(funct3)
 //          LB: ;
 //          LH: ;
@@ -67,6 +71,12 @@ module control_unit import riscv_cpu_pkg::*;
 //          LHU: ;
 //        endcase
       OPCODE_STORE:
+        reg_raddr_a_o = instr_i[19:15];
+        data_a_mux_o = OP_A_REG;
+        reg_raddr_b_o = instr_i[24:20]; // make parametric
+        data_b_mux_o  = OP_B_REG;
+        imm_mux_o = IMM_STORE;
+        alu_op_o = 0'; // addition between data_a and imm
 //        unique case(funct3)
 //          SB: ;
 //          SH: ;

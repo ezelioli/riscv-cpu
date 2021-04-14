@@ -35,6 +35,8 @@ package riscv_cpu_pkg;
   parameter JAL_MSB    = 31;
   parameter JAL_LSB    = 7;
 
+  parameter IMM_NBITS = IMM_MSB - IMM_LSB + 1;
+
   // OPCODES //
   parameter OPCODE_LUI       = 7'h37;
   parameter OPCODE_AUIPC     = 7'h17;
@@ -77,8 +79,10 @@ package riscv_cpu_pkg;
   parameter ALU_OP_WIDTH = 7;
 
   // IMMEDIATE MUX //
-  parameter IMM_Z = 1'b0;
-  parameter IMM_I = 1'b1;
+  parameter IMM_MUX_WIDTH = 2;
+  parameter IMM_Z     = 2'b00;
+  parameter IMM_I     = 2'b01;
+  parameter IMM_STORE = 2'b10;
 
   // CSR BIT FIELDS //
   parameter CSR_CARRY    = 0;
@@ -203,8 +207,10 @@ typedef struct {
   logic            [31:0] pc;
   logic             [1:0] branch_mux;
   logic            [31:0] branch_addr;
-  logic  [DATA_WIDTH-1:0] data_a;
-  logic  [DATA_WIDTH-1:0] data_b;
+  logic  [DATA_WIDTH-1:0] mem_wdata;
+  logic                   mem_we;
+//  logic  [DATA_WIDTH-1:0] data_a;
+//  logic  [DATA_WIDTH-1:0] data_b;
 } id2mem_t;
 
 typedef struct {
@@ -215,6 +221,7 @@ typedef struct {
 } ex2mem_t;
 
 typedef struct {
+  logic  [DATA_WIDTH-1:0] imm;
   logic  [DATA_WIDTH-1:0] alu_data_a;
   logic  [DATA_WIDTH-1:0] alu_data_b;
   logic                   alu_op;

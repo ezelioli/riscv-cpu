@@ -28,9 +28,9 @@ module mem_stage import riscv_cpu_pkg::*;
   logic            [31:0] pc          ;
   logic             [1:0] branch_mux  ;
   logic            [31:0] branch_addr ;
-  logic  [DATA_WIDTH-1:0] data_a      ;
-  logic  [DATA_WIDTH-1:0] data_b      ;
-  logic  [DATA_WIDTH-1:0] alu_result  ;
+  logic            [31:0] addr;
+  logic  [DATA_WIDTH-1:0] wdata;
+  logic                   we;
   logic   [CSR_WIDTH-1:0] alu_csr     ;
 
   // branch unit signals
@@ -40,11 +40,11 @@ module mem_stage import riscv_cpu_pkg::*;
   logic [1:0] b_branch_mux;
 
   // load store unit signals
-  logic                   lsu_req;
+//  logic                   lsu_req;
   logic                   lsu_we;
-  logic             [1:0] lsu_data_type;
+//  logic             [1:0] lsu_data_type;
   logic  [DATA_WIDTH-1:0] lsu_wdata;
-  logic                   lsu_load_event;
+//  logic                   lsu_load_event;
   logic            [31:0] lsu_addr;
   logic  [DATA_WIDTH-1:0] lsu_rdata;
 
@@ -64,11 +64,11 @@ module mem_stage import riscv_cpu_pkg::*;
     .data_wdata_o             ( data_wdata_o   ),
     .data_rdata_i             ( data_rdata_i   ),
 
-    .mem_req_i                ( lsu_req        ),
+//    .mem_req_i                ( lsu_req        ),
     .mem_we_i                 ( lsu_we         ),
-    .mem_data_type_i          ( lsu_data_type  ),
+//    .mem_data_type_i          ( lsu_data_type  ),
     .mem_wdata_i              ( lsu_wdata      ),
-    .mem_load_event_i         ( lsu_load_event ),
+//    .mem_load_event_i         ( lsu_load_event ),
     .mem_addr_i               ( lsu_addr       ),
     .mem_rdata_o              ( lsu_rdata      )
   );
@@ -86,9 +86,9 @@ module mem_stage import riscv_cpu_pkg::*;
   assign pc            = mem_pipeline_i.id_stage.pc;
   assign branch_mux    = mem_pipeline_i.id_stage.branch_mux;
   assign branch_addr   = mem_pipeline_i.id_stage.branch_addr;
-  assign data_a        = mem_pipeline_i.id_stage.data_a;
-  assign data_b        = mem_pipeline_i.id_stage.data_b;
-  assign alu_result    = mem_pipeline_i.alu_result;
+  assign wdata         = mem_pipeline_i.id_stage.mem_wdata;
+  assign we            = mem_pipeline_i.id_stage.mem_we;
+  assign addr          = mem_pipeline_i.alu_result; // memory address always comes from addition result
   assign alu_csr       = mem_pipeline_i.alu_csr;
 
   assign b_pc          = pc;
@@ -96,7 +96,11 @@ module mem_stage import riscv_cpu_pkg::*;
   assign b_branch_mux  = branch_mux;
 
   assign wb_pipeline_d.ex_stage = mem_pipeline_i.wb_pipeline;
-  assign wb_pipeline_d.mem_data = lsu_data_rdata;
+  assign wb_pipeline_d.mem_data = lsu_rdata;
+
+  assign lsu_addr   = addr;
+  assign lsu_wdata  = wdata;
+  assign lsu_we     = we;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
