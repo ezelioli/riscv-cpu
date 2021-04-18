@@ -54,9 +54,9 @@
 |*XORI*   |I-type |OPCODE_OP_IMM  |
 |*ORI*    |I-type |OPCODE_OP_IMM  |
 |*ANDI*   |I-type |OPCODE_OP_IMM  |
-|*SLLI*   |R-type*|OPCODE_OP_IMM  |
-|*SRLI*   |R-type*|OPCODE_OP_IMM  |
-|*SRAI*   |R-type*|OPCODE_OP_IMM  |
+|*SLLI*   |I-type*|OPCODE_OP_IMM  |
+|*SRLI*   |I-type*|OPCODE_OP_IMM  |
+|*SRAI*   |I-type*|OPCODE_OP_IMM  |
 |*ADD*    |R-type |OPCODE_OP      |
 |*SUB*    |R-type |OPCODE_OP      |
 |*SLL*    |R-type |OPCODE_OP      |
