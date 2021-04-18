@@ -34,10 +34,10 @@ module id_stage import riscv_cpu_pkg::*;
   ////////////////////////////////
   ////     CONTROL UNIT       ////
   ////////////////////////////////
-  logic data_a_mux;
+  logic [1:0] data_a_mux;
   logic data_b_mux;
   logic [IMM_MUX_WIDTH-1:0] imm_mux;
-  logic alu_op;
+  logic [ALU_OP_WIDTH-1:0] alu_op;
   logic reg_raddr_a;
   logic reg_raddr_b;
   logic reg_we;
@@ -103,14 +103,17 @@ module id_stage import riscv_cpu_pkg::*;
     imm = 0';
     unique case(imm_mux)
       IMM_Z:  imm = '0;
-      IMM_I:  imm[IMM_NBITS-1:0] = instr_i[IMM_MSB:IMM_LSB]; // basic zero extension
-      IMM_STORE: imm[IMM_NBITS-1:0] = {instr_i[31:25], instr_i[11:7]};
+      IMM_I:  imm[IMM_NBITS-1:0] = instr_i[IMM_MSB-1:IMM_LSB]; imm[DATA_WIDTH-1] = instr_i[IMM_MSB];
+      IMM_S:  imm[IMM_NBITS-1:0] = {instr_i[30:25], instr_i[11:7]}; imm[31] = instr_i[31];
+      IMM_J:  imm = 4;
+    endcase
   end
 
   always_comb begin
     unique case(data_a_mux)
       OP_A_REG:   data_a = rdata_a;
       OP_A_IMM:   data_a = imm;
+      OP_A_PC:    data_a = pc_id_i;
     endcase
     unique case(data_b_mux)
       OP_B_REG:    data_b = rdata_b;

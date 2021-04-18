@@ -14,7 +14,7 @@ module ex_stage import riscv_cpu_pkg::*;
   //internal signals
   logic  [DATA_WIDTH-1:0] alu_data_a;
   logic  [DATA_WIDTH-1:0] alu_data_b;
-  logic                   alu_op;
+  logic  [ALU_OP_WIDTH-1:0] alu_op;
 
   logic [DATA_WIDTH-1:0] alu_result;
   logic [CSR_WIDTH-1:0]  alu_csr;
