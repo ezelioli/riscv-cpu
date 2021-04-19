@@ -19,7 +19,8 @@ module control_unit import riscv_cpu_pkg::*;
 
   // direct control
   output logic            [1:0] pc_mux_o,
-  output logic                  jal_op_o
+  output logic                  jal_op_o,
+  output logic            [1:0] jal_mux_o
 );
   
   // internal signals
@@ -40,6 +41,7 @@ module control_unit import riscv_cpu_pkg::*;
     pc_mux_o     = CU_PC_NEXT;
     reg_we_o     = 1'b0;
     jal_op_o     = 1'b0;
+    jal_mux_o    = JAL_JUMP;
 
     unique case(opcode)
       OPCODE_LUI:
@@ -47,14 +49,22 @@ module control_unit import riscv_cpu_pkg::*;
       OPCODE_AUIPC:
         ;
       OPCODE_JAL:       // Jump And Link
-        jal_op_o     = 1'b1;
-        data_a_mux_o = OP_A_PC;
-        imm_mux_o    = IMM_J;
-        data_b_mux_o = OP_B_IMM;
-        alu_op_o     = ALU_ADD;
-        wdata_mux_o  = WDATA_ALU;
+        jal_op_o      = 1'b1;
+        data_a_mux_o  = OP_A_PC;
+        imm_mux_o     = IMM_J;
+        data_b_mux_o  = OP_B_IMM;
+        alu_op_o      = ALU_ADD;
+        wdata_mux_o   = WDATA_ALU;
+        jal_mux_o     = JAL_JUMP;
       OPCODE_JALR:      // Jump And Link Register
-        jal_op_o = 1'b1;
+        jal_op_o      = 1'b1;
+        data_a_mux_o  = OP_A_PC;
+        imm_mux_o     = IMM_J;
+        data_b_mux_o  = OP_B_IMM;
+        alu_op_o      = ALU_ADD;
+        wdata_mux_o   = WDATA_ALU;
+        reg_raddr_a_o = instr_i[19:15];
+        jal_mux_o     = JAL_JUMPR;
       OPCODE_BRANCH:    // Branch
         unique case(funct3)
           BEQ:     branch_mux_o = BRANCH_IF_EQUAL;

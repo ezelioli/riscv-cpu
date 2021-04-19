@@ -41,6 +41,7 @@ module core
   logic [1:0]            if_cu_pc_mux;
   logic                  if_branch_taken;
   logic [31:0]           if_branch_addr;
+  logic [31:0]           if_jal_addr;
   logic                  if_jal_op;
 
   // ID signals
@@ -79,7 +80,7 @@ module core
     .instr_rdata_i     (if_instr_rdata),
     .instr_addr_o      (instr_addr_o),
     .branch_addr_i     (if_branch_addr),
-
+    .jal_addr_i        (if_jal_addr),
     .jal_op_i          (if_jal_op),
 
     .cu_pc_mux_i       (if_cu_pc_mux),
@@ -112,6 +113,7 @@ module core
 
     .pc_mux_o         (if_cu_pc_mux),
     .jal_op_o         (if_jal_op),
+    .jal_addr_o       (if_jal_addr),
 
     .ex_pipeline_o    (ex_pipeline)
   );

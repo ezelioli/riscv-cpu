@@ -1,29 +1,29 @@
 module if_stage import riscv_cpu_pkg::*;
 #(
 ) (
-  input  logic                   clk_i,
-  input  logic                   rst_ni,
+  input  logic                      clk_i,
+  input  logic                      rst_ni,
 
   // instruction cache interface
   //output logic                   instr_req_o,
-  output logic            [31:0] instr_addr_o,
+  output logic               [31:0] instr_addr_o,
   //input  logic                   instr_gnt_i,
   //input  logic                   instr_rvalid_i,
-  input  logic            [31:0] instr_rdata_i,
-  input  logic            [31:0] branch_addr_i,
-
-  input  logic                   jal_op_i,
+  input  logic               [31:0] instr_rdata_i,
+  input  logic               [31:0] branch_addr_i,
+  input  logic               [31:0] jal_addr_i,
+  input  logic                      jal_op_i,
 
   // Forwarding ports - control signals
   //input  logic                   clear_instr_valid_i,   // clear instruction valid bit in IF/ID pipe
-  input  logic             [1:0] cu_pc_mux_i,             // sel for control unit pc multiplexer
-  input  logic                   branch_taken_i,
-  input  logic            [31:0] boot_addr_i,
+  input  logic                [1:0] cu_pc_mux_i,             // sel for control unit pc multiplexer
+  input  logic                      branch_taken_i,
+  input  logic               [31:0] boot_addr_i,
 
   // Output of IF Pipeline stage
   //output logic                   instr_valid_id_o,      // instruction in IF/ID pipeline is valid
-  output logic            [31:0] instr_rdata_id_o,        // read instruction is sampled and sent to ID stage for decoding
-  output logic            [31:0] pc_if_o
+  output logic               [31:0] instr_rdata_id_o,        // read instruction is sampled and sent to ID stage for decoding
+  output logic               [31:0] pc_if_o
 );
   
   logic      [31:0] next_addr;
@@ -66,9 +66,11 @@ module if_stage import riscv_cpu_pkg::*;
 
   // PC BRANCH UNIT MUX
   always_comb begin
+    pc_d = pc_q;
     unique case(bu_pc_mux)
       BU_PC_NEXT:    pc_d = next_addr;
-      BU_PC_JMP:     pc_d = branch_addr_i;
+      BU_PC_BRANCH:  pc_d = branch_addr_i;
+      BU_PC_JAL:     pc_d = jal_addr_i;
     endcase
   end
 

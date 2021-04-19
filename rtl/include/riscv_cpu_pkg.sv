@@ -34,8 +34,6 @@ package riscv_cpu_pkg;
   parameter REG_RD_LSB = 7;
   parameter IMM_MSB    = 31;
   parameter IMM_LSB    = 20;
-  parameter JAL_MSB    = 31;
-  parameter JAL_LSB    = 7;
 
   parameter IMM_NBITS = IMM_MSB - IMM_LSB + 1;
 
@@ -115,6 +113,10 @@ package riscv_cpu_pkg;
   parameter IMM_I     = 2'b01;
   parameter IMM_S     = 2'b10;
   parameter IMM_J     = 2'b11;
+
+  // JAL ADDRESS MUX //
+  parameter JAL_JUMP      = 0;
+  parameter JAL_JUMPR     = 1;
 
   // CSR BIT FIELDS //
   parameter CSR_CARRY    = 0;

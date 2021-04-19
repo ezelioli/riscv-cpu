@@ -1,23 +1,24 @@
 module id_stage import riscv_cpu_pkg::*;
 (
-  input  logic                   clk_i,    // Clock
-  input  logic                   rst_ni,   // Asynchronous reset active low
+  input  logic                      clk_i,    // Clock
+  input  logic                      rst_ni,   // Asynchronous reset active low
 
   // IF pipeline stage interface
-  input  logic            [31:0] instr_rdata_i,
-  input  logic            [31:0] pc_id_i,
+  input  logic               [31:0] instr_rdata_i,
+  input  logic               [31:0] pc_id_i,
 
   // Signals from WB pipeline stage
-  input  logic  [DATA_WIDTH-1:0] waddr_a_i,
-  input  logic  [DATA_WIDTH-1:0] wdata_a_i,
-  input  logic                   we_a_i,
+  input  logic     [DATA_WIDTH-1:0] waddr_a_i,
+  input  logic     [DATA_WIDTH-1:0] wdata_a_i,
+  input  logic                      we_a_i,
 
   // Control signals
-  output logic             [1:0] pc_mux_o,
-  output logic                   jal_op_o,
+  output logic                [1:0] pc_mux_o,
+  output logic                      jal_op_o,
+  output logic               [31:0] jal_addr_o,
 
   // Output of ID pipeline stage
-  output id2ex_t                 ex_pipeline_o
+  output id2ex_t                    ex_pipeline_o
 );
 
   ////////////////////////////////
@@ -43,6 +44,7 @@ module id_stage import riscv_cpu_pkg::*;
   logic reg_we;
   logic [1:0] branch_mux;
   logic [WDATA_MUX_WIDTH-1:0] wdata_mux;
+  logic [1:0] jal_mux;
 
   logic [DATA_WIDTH-1:0] data_a;
   logic [DATA_WIDTH-1:0] data_b;
@@ -51,6 +53,9 @@ module id_stage import riscv_cpu_pkg::*;
 
   logic [DATA_WIDTH-1:0] mem_wdata;
   logic                  mem_we;
+
+  logic [31:0] jal_offset;
+  logic [31:0] jalr_offset;
 
   id2mem_t mem_pipeline;
   id2wb_t  tb_pipeline;
@@ -86,7 +91,8 @@ module id_stage import riscv_cpu_pkg::*;
     .branch_mux_o   (branch_mux),
     .wdata_mux_o    (wdata_mux),
     .pc_mux_o       (pc_mux_o),
-    .jal_op_o       (jal_op_o)
+    .jal_op_o       (jal_op_o),
+    .jal_mux_o      (jal_mux)
   );
 
   assign raddr_a          = reg_raddr_a;
@@ -98,6 +104,9 @@ module id_stage import riscv_cpu_pkg::*;
 
   assign dest_reg         = instr_rdata_i[REG_RD_MSB:REG_RD_LSB]; // always the same
   assign mem_wdata        = data_b;
+
+  assign jal_offset  = {instr_rdata_i[31], 12'b0, instr_rdata_i[19:12], instr_rdata_i[20], instr_rdata_i[30:21]};
+  assign jalr_offset = {instr_rdata_i[31], 20'b0, instr_rdata_i[30:20]};
 
   always_comb begin
     imm = 0';
@@ -121,9 +130,16 @@ module id_stage import riscv_cpu_pkg::*;
     endcase
   end
 
+  always_comb begin
+    unique case(jal_mux)
+      JAL_JUMP:  jal_addr_o = pc_id_i + jal_offset;
+      JAL_JUMPR: jal_addr_o = rdata_a + jalr_offset;
+    endcase
+  end
+
   assign mem_pipeline.pc            = pc_id_i;
   assign mem_pipeline.branch_mux    = branch_mux;
-  assign mem_pipeline.branch_addr   = instr_i[JAL_MSB:JAL_LSB];  // to be changed to general address for all possible branches
+  assign mem_pipeline.branch_addr   = {instr_i[31], 20'b0, instr_i[7], instr_i[30:25], instr_i[11:8]};  // to be changed to general address for all possible branches
   assign mem_pipeline.mem_wdata     = mem_wdata;
   assign mem_pipeline.mem_we        = mem_we;
 
