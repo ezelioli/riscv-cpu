@@ -3,19 +3,19 @@ package tb_pkg;
   // INSTRUCTION MEMORY
   parameter INSTR_ADDR_WIDTH      = 32;
   parameter INSTR_WORD_WIDTH      = 32;
-  parameter INSTR_MEM_CONTENT     = [ 8'h00, 8'h00, 8'h00, 8'h00, 
+  parameter INSTR_MEM_CONTENT     = { 8'h13, 8'h80, 8'h02, 8'h00, // addi x5, x0, 1
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
+                                      8'h23, 8'h20, 8'h50, 8'h00, // sw x0, x5, 0
+                                      8'h00, 8'h00, 8'h00, 8'h00,
+                                      8'hEF, 8'h00, 8'h00, 8'h00, // jal x1, 0
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
-                                      8'h00, 8'h00, 8'h00, 8'h00,
-                                      8'h00, 8'h00, 8'h00, 8'h00,
-                                      8'h00, 8'h00, 8'h00, 8'h00,
-                                    ];
+                                    };
 
   // DATA MEMORY
   parameter DATA_ADDR_WIDTH      = 32;

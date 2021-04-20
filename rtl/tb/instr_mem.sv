@@ -14,6 +14,10 @@ module instr_mem import tb_pkg::*;
 
   assign addr_int = {addr_i[31:2], 2'b00};
 
+  initial begin
+    mem = INSTR_MEM_CONTENT;
+  end
+
   always @(posedge clk_i) begin
     if (en_i) begin      
       rdata_o[ 7: 0]  <= mem[addr_int    ];
