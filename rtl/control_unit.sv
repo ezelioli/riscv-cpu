@@ -66,6 +66,11 @@ module control_unit import riscv_cpu_pkg::*;
         reg_raddr_a_o = instr_i[19:15];
         jal_mux_o     = JAL_JUMPR;
       OPCODE_BRANCH:    // Branch
+        data_a_mux_o  = OP_A_REG;
+        reg_raddr_a_o = instr_i[19:15];
+        data_b_mux_o  = OP_B_REG;
+        reg_raddr_b_o = instr_i[24:20];
+        alu_op_o      = ALU_SUB;
         unique case(funct3)
           BEQ:     branch_mux_o = BRANCH_IF_EQUAL;
           BNE:     branch_mux_o = BRANCH_IF_EQUAL_N;
