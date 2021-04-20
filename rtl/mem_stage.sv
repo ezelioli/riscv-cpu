@@ -28,14 +28,13 @@ module mem_stage import riscv_cpu_pkg::*;
   logic            [31:0] pc          ;
   logic             [1:0] branch_mux  ;
   logic            [31:0] branch_addr ;
-  logic            [31:0] addr;
+  logic  [DATA_WIDTH-1:0] alu_result;
   logic  [DATA_WIDTH-1:0] wdata;
   logic                   we;
-  logic   [CSR_WIDTH-1:0] alu_csr     ;
 
   // branch unit signals
   logic [31:0] b_pc;
-  logic [CSR_WIDTH-1:0] b_csr;
+  logic [DATA_WIDTH-1:0] b_alu_result;
   logic b_taken;
   logic [1:0] b_branch_mux;
 
@@ -78,7 +77,7 @@ module mem_stage import riscv_cpu_pkg::*;
     .clk_i              (clk_i),
     .rst_ni             (rst_ni),
     .pc_i               (b_pc),
-    .csr_i              (b_csr),
+    .alu_result_i       (b_alu_result),
     .branch_mux_i       (b_branch_mux),
     .taken_o            (b_taken)
   );
@@ -88,17 +87,16 @@ module mem_stage import riscv_cpu_pkg::*;
   assign branch_addr   = mem_pipeline_i.id_stage.branch_addr;
   assign wdata         = mem_pipeline_i.id_stage.mem_wdata;
   assign we            = mem_pipeline_i.id_stage.mem_we;
-  assign addr          = mem_pipeline_i.alu_result; // memory address always comes from addition result
-  assign alu_csr       = mem_pipeline_i.alu_csr;
+  assign alu_result    = mem_pipeline_i.alu_result; // memory address always comes from addition result
 
   assign b_pc          = pc;
-  assign b_csr         = alu_csr;
   assign b_branch_mux  = branch_mux;
+  assign b_alu_result  = alu_result;
 
   assign wb_pipeline_d.ex_stage = mem_pipeline_i.wb_pipeline;
   assign wb_pipeline_d.mem_data = lsu_rdata;
 
-  assign lsu_addr   = addr;
+  assign lsu_addr   = alu_result;
   assign lsu_wdata  = wdata;
   assign lsu_we     = we;
 

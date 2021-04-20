@@ -17,7 +17,6 @@ module ex_stage import riscv_cpu_pkg::*;
   logic  [ALU_OP_WIDTH-1:0] alu_op;
 
   logic [DATA_WIDTH-1:0] alu_result;
-  logic [CSR_WIDTH-1:0]  alu_csr;
 
   ex2mem_t mem_pipeline_d;
   ex2mem_t mem_pipeline_q;
@@ -28,7 +27,6 @@ module ex_stage import riscv_cpu_pkg::*;
 
   assign mem_pipeline_d.id_stage    = ex_pipeline_i.mem_pipeline;
   assign mem_pipeline_d.alu_result  = alu_result;
-  assign mem_pipeline_d.alu_csr     = alu_csr;
   assign mem_pipeline_d.wb_pipeline = ex_pipeline_i.wb_pipeline;
 
   alu #(
@@ -36,13 +34,12 @@ module ex_stage import riscv_cpu_pkg::*;
     .data_a_i     (alu_data_a),
     .data_b_i     (alu_data_b),
     .op_i         (alu_op),
-    .data_o       (alu_result),
-    .csr_o        (alu_csr)
+    .data_o       (alu_result)
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      mem_pipeline_q    <= 0';
+      mem_pipeline_q    <= '0;
     end else begin
       mem_pipeline_q    <= mem_pipeline_d;
     end

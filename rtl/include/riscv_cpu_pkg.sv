@@ -101,11 +101,12 @@ package riscv_cpu_pkg;
   parameter ALU_SUB  = 4'b0001;
   parameter ALU_XOR  = 4'b0010;
   parameter ALU_AND  = 4'b0011;
-  parameter ALU_SLT  = 4'b0100;
-  parameter ALU_SLTU = 4'b0101;
-  parameter ALU_SLL  = 4'b0110;
-  parameter ALU_SRL  = 4'b0111;
-  parameter ALU_SRA  = 4'b1000;
+  parameter ALU_OR   = 4'b0100;
+  parameter ALU_SLT  = 4'b0101;
+  parameter ALU_SLTU = 4'b0110;
+  parameter ALU_SLL  = 4'b0111;
+  parameter ALU_SRL  = 4'b1000;
+  parameter ALU_SRA  = 4'b1001;
 
   // IMMEDIATE MUX //
   parameter IMM_MUX_WIDTH = 2;
@@ -166,7 +167,6 @@ typedef struct {
 typedef struct {
   id2mem_t                id_stage;
   logic  [DATA_WIDTH-1:0] alu_result;
-  logic   [CSR_WIDTH-1:0] alu_csr;
   ex2wb_t                 wb_pipeline;
 } ex2mem_t;
 
