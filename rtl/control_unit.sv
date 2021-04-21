@@ -44,11 +44,9 @@ module control_unit import riscv_cpu_pkg::*;
     jal_mux_o    = JAL_JUMP;
 
     unique case(opcode)
-      OPCODE_LUI:
-        data_a_mux_o = OP_A_REG;
-      OPCODE_AUIPC:
-        data_a_mux_o = OP_A_REG;
-      OPCODE_JAL:       // Jump And Link
+      OPCODE_LUI: data_a_mux_o = OP_A_REG;
+      OPCODE_AUIPC: data_a_mux_o = OP_A_REG;
+      OPCODE_JAL: begin      // Jump And Link
         jal_op_o      = 1'b1;
         data_a_mux_o  = OP_A_PC;
         imm_mux_o     = IMM_J;
@@ -56,7 +54,8 @@ module control_unit import riscv_cpu_pkg::*;
         alu_op_o      = ALU_ADD;
         wdata_mux_o   = WDATA_ALU;
         jal_mux_o     = JAL_JUMP;
-      OPCODE_JALR:      // Jump And Link Register
+      end
+      OPCODE_JALR: begin     // Jump And Link Register
         jal_op_o      = 1'b1;
         data_a_mux_o  = OP_A_PC;
         imm_mux_o     = IMM_J;
@@ -65,7 +64,8 @@ module control_unit import riscv_cpu_pkg::*;
         wdata_mux_o   = WDATA_ALU;
         reg_raddr_a_o = instr_i[19:15];
         jal_mux_o     = JAL_JUMPR;
-      OPCODE_BRANCH:    // Branch
+      end
+      OPCODE_BRANCH: begin   // Branch
         data_a_mux_o  = OP_A_REG;
         reg_raddr_a_o = instr_i[19:15];
         data_b_mux_o  = OP_B_REG;
@@ -76,7 +76,8 @@ module control_unit import riscv_cpu_pkg::*;
           BNE:     branch_mux_o = BRANCH_IF_EQUAL_N;
           default: branch_mux_o = NO_BRANCH;
         endcase
-      OPCODE_LOAD:
+      end
+      OPCODE_LOAD: begin
         reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_MEM;
         reg_raddr_a_o = instr_i[19:15]; // add parameters for these numbers
@@ -90,7 +91,8 @@ module control_unit import riscv_cpu_pkg::*;
 //          LBU: ;
 //          LHU: ;
 //        endcase
-      OPCODE_STORE:
+      end
+      OPCODE_STORE: begin
         reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
         reg_raddr_b_o = instr_i[24:20]; // make parametric
@@ -102,7 +104,8 @@ module control_unit import riscv_cpu_pkg::*;
 //          SH: ;
 //          SW: ;
 //        endcase
-      OPCODE_OP_IMM:
+      end
+      OPCODE_OP_IMM: begin
         imm_mux_o     = IMM_I;
         reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
@@ -118,7 +121,8 @@ module control_unit import riscv_cpu_pkg::*;
           SLLI : alu_op_o = ALU_SLL;
           SRI  : if(instr_i[30] == 1'b0) begin alu_op_o = ALU_SRL; end else begin alu_op_o = ALU_SRA; end
         endcase
-      OPCODE_OP:
+      end
+      OPCODE_OP: begin
         reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
         reg_raddr_b_o = instr_i[24:20];
@@ -134,10 +138,9 @@ module control_unit import riscv_cpu_pkg::*;
           OR  : alu_op_o = ALU_OR;
           AND : alu_op_o = ALU_AND;
         endcase
-      OPCODE_MISC_MEM:
-        data_a_mux_o = OP_A_REG;
-      OPCODE_SYSTEM:
-        data_a_mux_o = OP_A_REG;
+      end
+      OPCODE_MISC_MEM: data_a_mux_o = OP_A_REG;
+      OPCODE_SYSTEM:   data_a_mux_o = OP_A_REG;
     endcase // opcode
   end
 

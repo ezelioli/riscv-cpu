@@ -20,7 +20,7 @@ module load_store_unit_simple import riscv_cpu_pkg::*;
   input  logic  [DATA_WIDTH-1:0] mem_wdata_i,      // data to write to memory           -> from ex stage
 //  input  logic                   mem_load_event_i, // load event                        -> from ex stage
   input  logic            [31:0] mem_addr_i,
-  output logic  [DATA_WIDTH-1:0] mem_rdata_o,      // requested data                    -> to ex stage
+  output logic  [DATA_WIDTH-1:0] mem_rdata_o      // requested data                    -> to ex stage
 );
 
   assign data_addr_o  = mem_addr_i;

@@ -102,7 +102,7 @@ module mem_stage import riscv_cpu_pkg::*;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      wb_pipeline_q     <= '0;
+      wb_pipeline_q.mem_data     <= '0;
     end else begin
       wb_pipeline_q     <= wb_pipeline_d;
     end
