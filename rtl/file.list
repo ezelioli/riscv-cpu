@@ -1,0 +1,13 @@
+../rtl/alu.sv
+../rtl/branch_unit.sv
+../rtl/control_unit.sv
+../rtl/core.sv
+../rtl/csr.sv
+../rtl/ex_stage.sv
+../rtl/id_stage.sv
+../rtl/if_stage.sv
+../rtl/load_store_unit_simple.sv
+../rtl/mem_branch_ctl.sv
+../rtl/mem_stage.sv
+../rtl/register_file.sv
+../rtl/wb_stage.sv

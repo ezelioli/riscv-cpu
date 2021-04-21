@@ -1,0 +1,3 @@
+../rtl/tb/data_mem.sv
+../rtl/tb/instr_mem.sv
+../rtl/tb/tb_top.sv
