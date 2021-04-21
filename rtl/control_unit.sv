@@ -144,7 +144,4 @@ module control_unit import riscv_cpu_pkg::*;
     endcase // opcode
   end
 
-  assign reg_raddr_a_o    = instr_i[REG_S1_MSB:REG_S1_LSB];
-  assign reg_raddr_b_o    = instr_i[REG_S2_MSB:REG_S2_LSB];
-
 endmodule : control_unit
