@@ -11,7 +11,7 @@ module load_store_unit_simple import riscv_cpu_pkg::*;
   output logic  [DATA_WIDTH-1:0] data_addr_o,
   output logic                   data_we_o,
   output logic  [DATA_WIDTH-1:0] data_wdata_o,
-  input  logic  [DATA_WIDTH-1:0] data_rdata_i
+  input  logic  [DATA_WIDTH-1:0] data_rdata_i,
 
   // Signals from MEM stage
 //  input  logic                   mem_req_i,        // data request                      -> from ex stage

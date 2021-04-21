@@ -17,6 +17,8 @@ module register_file import riscv_cpu_pkg::*;
   input logic [DATA_WIDTH-1:0]   wdata_a_i,
   input logic                    we_a_i
 );
+  
+  localparam NUM_WORDS = 2 ** ADDR_WIDTH;
 
   logic [NUM_WORDS-1:0][DATA_WIDTH-1:0] mem_d, mem_q;
 
@@ -29,7 +31,7 @@ module register_file import riscv_cpu_pkg::*;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin : proc_mem_q
     if(~rst_ni) begin
-      mem_q <= 0';
+      mem_q <= '0;
     end else begin
       mem_q <= mem_d;
     end

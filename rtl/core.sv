@@ -1,4 +1,4 @@
-module core
+module core import riscv_cpu_pkg::*;
 #(
 ) (
   // Clock and Reset

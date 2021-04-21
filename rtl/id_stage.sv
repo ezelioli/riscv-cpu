@@ -109,11 +109,17 @@ module id_stage import riscv_cpu_pkg::*;
   assign jalr_offset = {instr_rdata_i[31], 20'b0, instr_rdata_i[30:20]};
 
   always_comb begin
-    imm = 0';
+    imm = '0;
     unique case(imm_mux)
       IMM_Z:  imm = '0;
-      IMM_I:  imm[IMM_NBITS-1:0] = instr_i[IMM_MSB-1:IMM_LSB]; imm[DATA_WIDTH-1] = instr_i[IMM_MSB];
-      IMM_S:  imm[IMM_NBITS-1:0] = {instr_i[30:25], instr_i[11:7]}; imm[31] = instr_i[31];
+      IMM_I:  begin
+        imm[IMM_NBITS-1:0] = instr_rdata_i[IMM_MSB-1:IMM_LSB];
+        imm[DATA_WIDTH-1]  = instr_rdata_i[IMM_MSB];
+      end
+      IMM_S:  begin
+        imm[IMM_NBITS-1:0] = {instr_rdata_i[30:25], instr_rdata_i[11:7]};
+        imm[31]            = instr_rdata_i[31];
+      end
       IMM_J:  imm = 4;
     endcase
   end
@@ -139,7 +145,7 @@ module id_stage import riscv_cpu_pkg::*;
 
   assign mem_pipeline.pc            = pc_id_i;
   assign mem_pipeline.branch_mux    = branch_mux;
-  assign mem_pipeline.branch_addr   = {instr_i[31], 20'b0, instr_i[7], instr_i[30:25], instr_i[11:8]};  // to be changed to general address for all possible branches
+  assign mem_pipeline.branch_addr   = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};  // to be changed to general address for all possible branches
   assign mem_pipeline.mem_wdata     = mem_wdata;
   assign mem_pipeline.mem_we        = mem_we;
 
@@ -157,7 +163,7 @@ module id_stage import riscv_cpu_pkg::*;
   // ID pipeline stage registers
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      ex_pipeline_q <= 0';
+      ex_pipeline_q <= '0;
     end else begin
       ex_pipeline_o <= ex_pipeline_d;
     end

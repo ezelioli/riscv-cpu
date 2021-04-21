@@ -80,9 +80,9 @@ module if_stage import riscv_cpu_pkg::*;
   // registers of IF pipeline stage
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      pc_q        <= 0';
-      pc_old_q    <= 0';
-      instr_reg_q <= 0';
+      pc_q        <= '0;
+      pc_old_q    <= '0;
+      instr_reg_q <= '0;
     end else begin
       pc_q        <= pc_d;
       pc_old_q    <= pc_old_d;

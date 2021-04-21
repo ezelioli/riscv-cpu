@@ -30,10 +30,10 @@ module wb_stage import riscv_cpu_pkg::*;
   // wdata multiplexing
   always_comb begin
     wdata_o = alu_result;
-    unique case(wdata_mux) begin
+    unique case(wdata_mux) 
       WDATA_ALU: wdata_o = alu_result;
       WDATA_MEM: wdata_o = mem_data;
-    end
+    endcase
   end
 
   assign dest_reg_o   = dest_reg;

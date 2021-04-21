@@ -11,8 +11,11 @@ module mem_branch_ctl import riscv_cpu_pkg::*;
   output logic                  taken_o
 );
 
-  logic flag_zero = (alu_result_i == 0) ? 1'b1 : 1'b0;
-  logic flag_sign = alu_result_i[31];
+  logic flag_zero;
+  logic flag_sign;
+
+  assign flag_zero = (alu_result_i == 0) ? 1'b1 : 1'b0;
+  assign flag_sign = alu_result_i[31];
   
   always_comb begin
     taken_o = 1'b0;

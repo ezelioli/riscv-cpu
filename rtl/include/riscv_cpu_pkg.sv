@@ -89,8 +89,8 @@ package riscv_cpu_pkg;
   parameter AND  = 3'b111;
 
   // ALU OPERANDS MUX //
-  parameter OP_A_REG   = 1'b00;
-  parameter OP_A_IMM   = 1'b01;
+  parameter OP_A_REG   = 2'b00;
+  parameter OP_A_IMM   = 2'b01;
   parameter OP_A_PC    = 2'b10;
   parameter OP_B_REG   = 0;
   parameter OP_B_IMM   = 1;

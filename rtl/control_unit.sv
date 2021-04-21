@@ -45,9 +45,9 @@ module control_unit import riscv_cpu_pkg::*;
 
     unique case(opcode)
       OPCODE_LUI:
-        ;
+        data_a_mux_o = OP_A_REG;
       OPCODE_AUIPC:
-        ;
+        data_a_mux_o = OP_A_REG;
       OPCODE_JAL:       // Jump And Link
         jal_op_o      = 1'b1;
         data_a_mux_o  = OP_A_PC;
@@ -135,11 +135,9 @@ module control_unit import riscv_cpu_pkg::*;
           AND : alu_op_o = ALU_AND;
         endcase
       OPCODE_MISC_MEM:
-        ;
+        data_a_mux_o = OP_A_REG;
       OPCODE_SYSTEM:
-        ;
-      default:
-        ;
+        data_a_mux_o = OP_A_REG;
     endcase // opcode
   end
 
