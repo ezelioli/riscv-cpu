@@ -15,7 +15,7 @@ endif
 questa-${VER} vlib $LIB
 
 # compile SystemVerilog sourcecode
-questa-$VER vlog -sv -work ${LIB} -check_synthesis -f ${SOURCEDIR}/file.list
+questa-$VER vlog -sv -work ${LIB} -f ${SOURCEDIR}/file.list
 
 # compile testbench
 questa-$VER vlog -sv ${VLOGFLAGS} -work ${LIB} -f ${SOURCEDIR}/tb/file.list

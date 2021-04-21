@@ -1,3 +1,4 @@
+../rtl/include/riscv_cpu_pkg.sv
 ../rtl/alu.sv
 ../rtl/branch_unit.sv
 ../rtl/control_unit.sv
