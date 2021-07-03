@@ -1,5 +1,8 @@
-module tb_top import tb_pkg;
+module tb_top import tb_pkg::*;
 ();
+
+  timeunit 1ns;
+  timeprecision 100ps;
 
 
   const time CLK_PHASE_HI         = 5ns;
@@ -7,7 +10,7 @@ module tb_top import tb_pkg;
   const time CLK_PERIOD           = CLK_PHASE_HI + CLK_PHASE_LO;
   const time STIM_APPLICATION_DEL = CLK_PERIOD * 0.1;
   const time RESP_ACQUISITION_DEL = CLK_PERIOD * 0.9;
-  const int  RESET_WAIT_CYCLES    = 4;
+  const int  RESET_WAIT_CYCLES    = 10;
   const int  SIMULATION_CYCLES    = 1000;
 
   logic clk;
@@ -65,7 +68,7 @@ module tb_top import tb_pkg;
 
 
   initial begin: clock_gen
-      
+      clk = 1'b1; 
       forever begin
           #CLK_PHASE_HI clk = 1'b0;
           #CLK_PHASE_LO clk = 1'b1;
@@ -94,6 +97,7 @@ module tb_top import tb_pkg;
 
     $display("Simulation terminated after %d cycles", SIMULATION_CYCLES);
     $stop();
+    //$finish();
   
   end: reset_gen
 

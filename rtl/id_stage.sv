@@ -8,7 +8,7 @@ module id_stage import riscv_cpu_pkg::*;
   input  logic               [31:0] pc_id_i,
 
   // Signals from WB pipeline stage
-  input  logic     [DATA_WIDTH-1:0] waddr_a_i,
+  input  logic     [ADDR_WIDTH-1:0] waddr_a_i,
   input  logic     [DATA_WIDTH-1:0] wdata_a_i,
   input  logic                      we_a_i,
 
@@ -38,9 +38,9 @@ module id_stage import riscv_cpu_pkg::*;
   logic [1:0] data_a_mux;
   logic data_b_mux;
   logic [IMM_MUX_WIDTH-1:0] imm_mux;
-  logic [ALU_OP_WIDTH-1:0] alu_op;
-  logic reg_raddr_a;
-  logic reg_raddr_b;
+  logic [ALU_OP_WIDTH-1:0]  alu_op;
+  logic [ADDR_WIDTH-1:0]    reg_raddr_a;
+  logic [ADDR_WIDTH-1:0]    reg_raddr_b;
   logic reg_we;
   logic [1:0] branch_mux;
   logic [WDATA_MUX_WIDTH-1:0] wdata_mux;
@@ -58,7 +58,7 @@ module id_stage import riscv_cpu_pkg::*;
   logic [31:0] jalr_offset;
 
   id2mem_t mem_pipeline;
-  id2wb_t  tb_pipeline;
+  id2wb_t  wb_pipeline;
 
   id2ex_t ex_pipeline_d;
   id2ex_t ex_pipeline_q;
@@ -90,6 +90,8 @@ module id_stage import riscv_cpu_pkg::*;
     .reg_we_o       (reg_we),
     .branch_mux_o   (branch_mux),
     .wdata_mux_o    (wdata_mux),
+    .mem_we_o       (mem_we),
+
     .pc_mux_o       (pc_mux_o),
     .jal_op_o       (jal_op_o),
     .jal_mux_o      (jal_mux)
@@ -143,29 +145,37 @@ module id_stage import riscv_cpu_pkg::*;
     endcase
   end
 
-  assign mem_pipeline.pc            = pc_id_i;
-  assign mem_pipeline.branch_mux    = branch_mux;
-  assign mem_pipeline.branch_addr   = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};  // to be changed to general address for all possible branches
-  assign mem_pipeline.mem_wdata     = mem_wdata;
-  assign mem_pipeline.mem_we        = mem_we;
+  assign mem_pipeline.pc                      = pc_id_i;
+  assign mem_pipeline.branch_mux              = branch_mux;
+  assign mem_pipeline.branch_addr             = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};  // to be changed to general address for all possible branches
+  assign mem_pipeline.mem_wdata               = mem_wdata;
+  assign mem_pipeline.mem_we                  = mem_we;
 
-  assign wb_pipeline.reg_we         = reg_we;
-  assign wb_pipeline.wdata_mux      = wdata_mux;
-  assign wb_pipeline.dest_reg       = dest_reg;
+  assign wb_pipeline.reg_we                   = reg_we;
+  assign wb_pipeline.wdata_mux                = wdata_mux;
+  assign wb_pipeline.dest_reg                 = dest_reg;
 
-  assign ex_pipeline_d.imm          = imm;
-  assign ex_pipeline_d.alu_data_a   = data_a;
-  assign ex_pipeline_d.alu_data_b   = data_b;
-  assign ex_pipeline_d.alu_op       = alu_op;
-  assign ex_pipeline_d.mem_pipeline = mem_pipeline;
-  assign ex_pipeline_d.wb_pipeline  = wb_pipeline;
+  assign ex_pipeline_d.imm                    = imm;
+  assign ex_pipeline_d.alu_data_a             = data_a;
+  assign ex_pipeline_d.alu_data_b             = data_b;
+  assign ex_pipeline_d.alu_op                 = alu_op;
+  assign ex_pipeline_d.mem_pipeline           = mem_pipeline;
+  assign ex_pipeline_d.wb_pipeline.id_stage   = wb_pipeline;
 
   // ID pipeline stage registers
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      ex_pipeline_q <= '0;
+      ex_pipeline_q <= '{default:'0};;
+      // ex_pipeline_q = '{
+      //   '0, 
+      //   '0, 
+      //   '0, 
+      //   '0, 
+      //   '{'0, '0, '0, '0, '0}, 
+      //   '{'{'0, '0, '0}, '0} 
+      // };
     end else begin
-      ex_pipeline_o <= ex_pipeline_d;
+      ex_pipeline_q <= ex_pipeline_d;
     end
   end
 

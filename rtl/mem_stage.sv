@@ -12,6 +12,7 @@ module mem_stage import riscv_cpu_pkg::*;
 
   // Output signals
   output logic            [31:0] branch_addr_o,
+  output logic                   taken_o,
 
   // Signals reserved for data memory interface
   output logic                   data_req_o,
@@ -19,6 +20,7 @@ module mem_stage import riscv_cpu_pkg::*;
   input  logic                   data_rvalid_i,
   output logic  [DATA_WIDTH-1:0] data_addr_o,
   output logic                   data_we_o,
+  output logic             [3:0] data_be_o,
   output logic  [DATA_WIDTH-1:0] data_wdata_o,
   input  logic  [DATA_WIDTH-1:0] data_rdata_i
 
@@ -60,6 +62,7 @@ module mem_stage import riscv_cpu_pkg::*;
     .data_rvalid_i            ( data_rvalid_i  ),
     .data_addr_o              ( data_addr_o    ),
     .data_we_o                ( data_we_o      ),
+    .data_be_o                ( data_be_o      ),
     .data_wdata_o             ( data_wdata_o   ),
     .data_rdata_i             ( data_rdata_i   ),
 
