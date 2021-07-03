@@ -1,0 +1,4 @@
+../rtl/include/tb_pkg.sv
+../rtl/tb/data_mem.sv
+../rtl/tb/instr_mem.sv
+../rtl/tb/tb_top.sv

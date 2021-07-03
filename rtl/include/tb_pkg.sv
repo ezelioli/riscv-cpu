@@ -3,6 +3,8 @@ package tb_pkg;
   // INSTRUCTION MEMORY
   parameter INSTR_ADDR_WIDTH      = 32;
   parameter INSTR_WORD_WIDTH      = 32;
+  parameter INSTR_INIT_FILE         = "../rtl/tb/instructions.mem";
+  parameter INSTR_CONTENT_LENGTH  = 11; 
   parameter INSTR_MEM_CONTENT     = { 8'h13, 8'h80, 8'h02, 8'h00, // addi x5, x0, 1
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
@@ -14,7 +16,7 @@ package tb_pkg;
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
-                                      8'h00, 8'h00, 8'h00, 8'h00,
+                                      8'h00, 8'h00, 8'h00, 8'h00
                                     };
 
   // DATA MEMORY

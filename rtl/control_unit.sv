@@ -16,6 +16,7 @@ module control_unit import riscv_cpu_pkg::*;
   output logic                       reg_we_o,
   output logic                 [1:0] branch_mux_o,
   output logic [WDATA_MUX_WIDTH-1:0] wdata_mux_o,
+  output logic                       mem_we_o,
 
   // direct control
   output logic            [1:0] pc_mux_o,
@@ -42,6 +43,7 @@ module control_unit import riscv_cpu_pkg::*;
     reg_we_o     = 1'b0;
     jal_op_o     = 1'b0;
     jal_mux_o    = JAL_JUMP;
+    mem_we_o     = 1'b0;      
 
     unique case(opcode)
       OPCODE_LUI: data_a_mux_o = OP_A_REG;
@@ -62,14 +64,11 @@ module control_unit import riscv_cpu_pkg::*;
         data_b_mux_o  = OP_B_IMM;
         alu_op_o      = ALU_ADD;
         wdata_mux_o   = WDATA_ALU;
-        reg_raddr_a_o = instr_i[19:15];
         jal_mux_o     = JAL_JUMPR;
       end
       OPCODE_BRANCH: begin   // Branch
         data_a_mux_o  = OP_A_REG;
-        reg_raddr_a_o = instr_i[19:15];
         data_b_mux_o  = OP_B_REG;
-        reg_raddr_b_o = instr_i[24:20];
         alu_op_o      = ALU_SUB;
         unique case(funct3)
           BEQ:     branch_mux_o = BRANCH_IF_EQUAL;
@@ -80,7 +79,6 @@ module control_unit import riscv_cpu_pkg::*;
       OPCODE_LOAD: begin
         reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_MEM;
-        reg_raddr_a_o = instr_i[19:15]; // add parameters for these numbers
         data_a_mux_o  = OP_A_REG;
         imm_mux_o     = IMM_I;
         alu_op_o      = ALU_ADD;
@@ -93,12 +91,11 @@ module control_unit import riscv_cpu_pkg::*;
 //        endcase
       end
       OPCODE_STORE: begin
-        reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
-        reg_raddr_b_o = instr_i[24:20]; // make parametric
         data_b_mux_o  = OP_B_REG;
         imm_mux_o     = IMM_S;
         alu_op_o      = ALU_ADD;
+        mem_we_o      = 1'b1;
 //        unique case(funct3)
 //          SB: ;
 //          SH: ;
@@ -107,7 +104,6 @@ module control_unit import riscv_cpu_pkg::*;
       end
       OPCODE_OP_IMM: begin
         imm_mux_o     = IMM_I;
-        reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
         data_b_mux_o  = OP_B_IMM;
         wdata_mux_o   = WDATA_ALU;
@@ -123,9 +119,7 @@ module control_unit import riscv_cpu_pkg::*;
         endcase
       end
       OPCODE_OP: begin
-        reg_raddr_a_o = instr_i[19:15];
         data_a_mux_o  = OP_A_REG;
-        reg_raddr_b_o = instr_i[24:20];
         data_b_mux_o  = OP_B_REG;
         wdata_mux_o   = WDATA_ALU;
         unique case(funct3)
@@ -141,6 +135,7 @@ module control_unit import riscv_cpu_pkg::*;
       end
       OPCODE_MISC_MEM: data_a_mux_o = OP_A_REG;
       OPCODE_SYSTEM:   data_a_mux_o = OP_A_REG;
+      default: ;
     endcase // opcode
   end
 

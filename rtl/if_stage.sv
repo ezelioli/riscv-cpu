@@ -5,7 +5,7 @@ module if_stage import riscv_cpu_pkg::*;
   input  logic                      rst_ni,
 
   // instruction cache interface
-  //output logic                   instr_req_o,
+  output logic                      instr_req_o,
   output logic               [31:0] instr_addr_o,
   //input  logic                   instr_gnt_i,
   //input  logic                   instr_rvalid_i,
@@ -44,6 +44,9 @@ module if_stage import riscv_cpu_pkg::*;
     .jal_op_i         (bu_jal_op),
     .pc_mux_o         (bu_pc_mux)
   );
+
+  // TO BE IMPLEMENTED
+  assign instr_req_o = 1'b1;
 
   assign bu_jal_op = jal_op_i;
 
@@ -92,5 +95,7 @@ module if_stage import riscv_cpu_pkg::*;
 
   assign pc_if_o          = pc_old_q;
   assign instr_rdata_id_o = instr_reg_q;
+
+  assign instr_addr_o = pc_q;
 
 endmodule

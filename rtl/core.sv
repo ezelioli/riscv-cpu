@@ -61,6 +61,10 @@ module core import riscv_cpu_pkg::*;
   mem2wb_t wb_pipeline;
 
   
+  // TO BE IMPLEMENTED
+  assign irq_ack_o = 1'b0;
+  assign irq_id_o = 1'b0;
+
   assign if_instr_rdata = instr_rdata_i;
 
 
@@ -78,6 +82,7 @@ module core import riscv_cpu_pkg::*;
     .rst_ni            (rst_ni),
 
     .instr_rdata_i     (if_instr_rdata),
+    .instr_req_o       (instr_req_o),
     .instr_addr_o      (instr_addr_o),
     .branch_addr_i     (if_branch_addr),
     .jal_addr_i        (if_jal_addr),
@@ -162,6 +167,7 @@ module core import riscv_cpu_pkg::*;
     .data_rvalid_i     (data_rvalid_i),
     .data_addr_o       (data_addr_o),
     .data_we_o         (data_we_o),
+    .data_be_o         (data_be_o),
     .data_wdata_o      (data_wdata_o),
     .data_rdata_i      (data_rdata_i)
   );
@@ -186,3 +192,5 @@ module core import riscv_cpu_pkg::*;
     .dest_reg_o        (id_waddr_a),
     .we_o              (id_we_a)
   );
+
+endmodule : core

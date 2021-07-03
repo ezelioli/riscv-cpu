@@ -10,6 +10,7 @@ module load_store_unit_simple import riscv_cpu_pkg::*;
   input  logic                   data_rvalid_i,
   output logic  [DATA_WIDTH-1:0] data_addr_o,
   output logic                   data_we_o,
+  output logic             [3:0] data_be_o,
   output logic  [DATA_WIDTH-1:0] data_wdata_o,
   input  logic  [DATA_WIDTH-1:0] data_rdata_i,
 
@@ -26,6 +27,7 @@ module load_store_unit_simple import riscv_cpu_pkg::*;
   assign data_addr_o  = mem_addr_i;
   assign data_we_o    = mem_we_i;
   assign data_wdata_o = mem_wdata_i;
+  assign data_be_o    = 4'hF; // assign based on mem_data_type
   assign data_req_o   = 1'b1;
 
   assign mem_rdata_o = data_rdata_i;

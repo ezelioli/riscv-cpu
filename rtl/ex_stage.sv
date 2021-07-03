@@ -39,7 +39,12 @@ module ex_stage import riscv_cpu_pkg::*;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      mem_pipeline_q    <= '0;
+      mem_pipeline_q <= '{default:'0};
+      // mem_pipeline_q    <= '{
+      //   id_stage: '{'0, '0, '0, '0, '0},
+      //   alu_result: '0, 
+      //   wb_pipeline: '{'{'0, '0, '0}, '0}
+      // };
     end else begin
       mem_pipeline_q    <= mem_pipeline_d;
     end
