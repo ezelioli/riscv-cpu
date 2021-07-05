@@ -138,46 +138,89 @@ package riscv_cpu_pkg;
 
 
 // type definition
-typedef struct {
+typedef struct{
+  logic  [ALU_OP_WIDTH-1:0] alu_op;
+} ex_ctl_t;
+
+typedef struct{
+  logic             [1:0] branch_mux;
+  logic                   mem_we;
+} mem_ctl_t;
+
+typedef struct{
   logic                        reg_we;
   logic  [WDATA_MUX_WIDTH-1:0] wdata_mux;
-  logic       [ADDR_WIDTH-1:0] dest_reg;
-} id2wb_t;
+} wb_ctl_t;
 
 typedef struct {
-  id2wb_t                      id_stage;
-  logic       [DATA_WIDTH-1:0] alu_result;
-} ex2wb_t;
+  logic  [DATA_WIDTH-1:0] imm;
+  logic  [DATA_WIDTH-1:0] alu_data_a;
+  logic  [DATA_WIDTH-1:0] alu_data_b;
+  logic            [31:0] pc;
+  logic            [31:0] branch_addr;
+  logic  [DATA_WIDTH-1:0] mem_wdata;
+  logic  [ADDR_WIDTH-1:0] dest_reg;
 
-typedef struct {
-  ex2wb_t                      ex_stage;
-  logic       [DATA_WIDTH-1:0] mem_data;
-} mem2wb_t;
+} id2ex_t;
 
 typedef struct {
   logic            [31:0] pc;
-  logic             [1:0] branch_mux;
   logic            [31:0] branch_addr;
   logic  [DATA_WIDTH-1:0] mem_wdata;
-  logic                   mem_we;
-//  logic  [DATA_WIDTH-1:0] data_a;
-//  logic  [DATA_WIDTH-1:0] data_b;
-} id2mem_t;
+  logic  [ADDR_WIDTH-1:0] dest_reg;
 
-typedef struct {
-  id2mem_t                id_stage;
   logic  [DATA_WIDTH-1:0] alu_result;
-  ex2wb_t                 wb_pipeline;
 } ex2mem_t;
 
 typedef struct {
-  logic  [DATA_WIDTH-1:0]   imm;
-  logic  [DATA_WIDTH-1:0]   alu_data_a;
-  logic  [DATA_WIDTH-1:0]   alu_data_b;
-  logic  [ALU_OP_WIDTH-1:0] alu_op;
-  id2mem_t                  mem_pipeline;
-  ex2wb_t                   wb_pipeline;
-} id2ex_t;
+  logic       [ADDR_WIDTH-1:0] dest_reg;
+  logic       [DATA_WIDTH-1:0] alu_result;
+
+  logic       [DATA_WIDTH-1:0] mem_data;
+} mem2wb_t;
+
+
+
+
+
+// typedef struct {
+//   logic                        reg_we;
+//   logic  [WDATA_MUX_WIDTH-1:0] wdata_mux;
+//   logic       [ADDR_WIDTH-1:0] dest_reg;
+// } id2wb_t;
+
+// typedef struct {
+//   logic            [31:0] pc;
+//   logic             [1:0] branch_mux;
+//   logic            [31:0] branch_addr;
+//   logic  [DATA_WIDTH-1:0] mem_wdata;
+//   logic                   mem_we;
+// } id2mem_t;
+
+// typedef struct {
+//   logic  [DATA_WIDTH-1:0]   imm;
+//   logic  [DATA_WIDTH-1:0]   alu_data_a;
+//   logic  [DATA_WIDTH-1:0]   alu_data_b;
+//   logic  [ALU_OP_WIDTH-1:0] alu_op;
+//   id2mem_t                  mem_pipeline;
+//   id2wb_t                   wb_pipeline;
+// } id2ex_t;
+
+// typedef struct {
+//   // id2wb_t                      id_stage;
+//   logic       [DATA_WIDTH-1:0] alu_result;
+// } ex2wb_t;
+
+// typedef struct {
+//   ex2wb_t                      ex_stage;
+//   logic       [DATA_WIDTH-1:0] mem_data;
+// } mem2wb_t;
+
+// typedef struct {
+//   id2mem_t                id_stage;
+//   logic  [DATA_WIDTH-1:0] alu_result;
+//   ex2wb_t                 wb_pipeline; // fix this to include correct data
+// } ex2mem_t;
 
 //typedef enum logic [ALU_OP_WIDTH-1:0]
 //{

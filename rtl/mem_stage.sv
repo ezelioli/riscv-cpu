@@ -4,6 +4,12 @@ module mem_stage import riscv_cpu_pkg::*;
   input  logic                   clk_i,
   input  logic                   rst_ni,
 
+  // Pipelined control
+  input  mem_ctl_t               mem_ctl_i,
+  input  wb_ctl_t                wb_ctl_i,
+
+  output wb_ctl_t                wb_ctl_o,
+
   // MEM pipeline stage interface
   input  ex2mem_t                mem_pipeline_i,
   
@@ -49,6 +55,9 @@ module mem_stage import riscv_cpu_pkg::*;
   logic            [31:0] lsu_addr;
   logic  [DATA_WIDTH-1:0] lsu_rdata;
 
+  wb_ctl_t wb_ctl_d;
+  wb_ctl_t wb_ctl_q;
+
   mem2wb_t wb_pipeline_d;
   mem2wb_t wb_pipeline_q;
   
@@ -85,19 +94,24 @@ module mem_stage import riscv_cpu_pkg::*;
     .taken_o            (b_taken)
   );
 
-  assign pc            = mem_pipeline_i.id_stage.pc;
-  assign branch_mux    = mem_pipeline_i.id_stage.branch_mux;
-  assign branch_addr   = mem_pipeline_i.id_stage.branch_addr;
-  assign wdata         = mem_pipeline_i.id_stage.mem_wdata;
-  assign we            = mem_pipeline_i.id_stage.mem_we;
+  assign pc            = mem_pipeline_i.pc;
+  assign branch_addr   = mem_pipeline_i.branch_addr;
+  assign wdata         = mem_pipeline_i.mem_wdata;
+  assign dest_reg      = mem_pipeline_i.dest_reg;
   assign alu_result    = mem_pipeline_i.alu_result; // memory address always comes from addition result
+
+  assign branch_mux    = mem_ctl_i.branch_mux;
+  assign we            = mem_ctl_i.mem_we;
 
   assign b_pc          = pc;
   assign b_branch_mux  = branch_mux;
   assign b_alu_result  = alu_result;
 
-  assign wb_pipeline_d.ex_stage = mem_pipeline_i.wb_pipeline;
-  assign wb_pipeline_d.mem_data = lsu_rdata;
+  assign wb_ctl_d      = wb_ctl_i;
+
+  assign wb_pipeline_d.dest_reg   = dest_reg;
+  assign wb_pipeline_d.alu_result = alu_result;
+  assign wb_pipeline_d.mem_data   = lsu_rdata;
 
   assign lsu_addr   = alu_result;
   assign lsu_wdata  = wdata;
@@ -105,12 +119,15 @@ module mem_stage import riscv_cpu_pkg::*;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      wb_pipeline_q.mem_data     <= '0;
+      wb_ctl_q          <= '{default: '0};
+      wb_pipeline_q     <= '{default: '0};
     end else begin
+      wb_ctl_q          <= wb_ctl_d;
       wb_pipeline_q     <= wb_pipeline_d;
     end
   end
 
+  assign wb_ctl_o       = wb_ctl_q;
   assign wb_pipeline_o  = wb_pipeline_q;
   assign branch_addr_o  = branch_addr;
   assign taken_o        = b_taken;

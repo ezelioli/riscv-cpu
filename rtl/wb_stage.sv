@@ -4,6 +4,9 @@ module wb_stage import riscv_cpu_pkg::*;
   input  logic                   clk_i,
   input  logic                   rst_ni,
 
+  // Pipelined control signals
+  input  wb_ctl_t                wb_ctl_i,
+
   // WB pipeline stage interface
   input  mem2wb_t                wb_pipeline_i,
 
@@ -21,10 +24,11 @@ module wb_stage import riscv_cpu_pkg::*;
   logic       [DATA_WIDTH-1:0] alu_result;
   logic       [DATA_WIDTH-1:0] mem_data;
 
-  assign reg_we       = wb_pipeline_i.ex_stage.id_stage.reg_we;
-  assign wdata_mux    = wb_pipeline_i.ex_stage.id_stage.wdata_mux;
-  assign dest_reg     = wb_pipeline_i.ex_stage.id_stage.dest_reg;
-  assign alu_result   = wb_pipeline_i.ex_stage.alu_result;
+  assign reg_we       = wb_ctl_i.reg_we;
+  assign wdata_mux    = wb_ctl_i.wdata_mux;
+  
+  assign dest_reg     = wb_pipeline_i.dest_reg;
+  assign alu_result   = wb_pipeline_i.alu_result;
   assign mem_data     = wb_pipeline_i.mem_data;
 
   // wdata multiplexing

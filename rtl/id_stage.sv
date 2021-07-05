@@ -17,6 +17,11 @@ module id_stage import riscv_cpu_pkg::*;
   output logic                      jal_op_o,
   output logic               [31:0] jal_addr_o,
 
+  // Pipelined control
+  output ex_ctl_t                   ex_ctl_o,
+  output mem_ctl_t                  mem_ctl_o,
+  output wb_ctl_t                   wb_ctl_o,
+
   // Output of ID pipeline stage
   output id2ex_t                    ex_pipeline_o
 );
@@ -57,8 +62,17 @@ module id_stage import riscv_cpu_pkg::*;
   logic [31:0] jal_offset;
   logic [31:0] jalr_offset;
 
-  id2mem_t mem_pipeline;
-  id2wb_t  wb_pipeline;
+  //id2mem_t mem_pipeline;
+  //id2wb_t  wb_pipeline;
+
+  ex_ctl_t ex_ctl_d;
+  ex_ctl_t ex_ctl_q;
+
+  mem_ctl_t mem_ctl_d;
+  mem_ctl_t mem_ctl_q;
+
+  wb_ctl_t wb_ctl_d;
+  wb_ctl_t wb_ctl_q;
 
   id2ex_t ex_pipeline_d;
   id2ex_t ex_pipeline_q;
@@ -127,6 +141,8 @@ module id_stage import riscv_cpu_pkg::*;
   end
 
   always_comb begin
+    data_a = rdata_a;
+    data_b = rdata_b;
     unique case(data_a_mux)
       OP_A_REG:   data_a = rdata_a;
       OP_A_IMM:   data_a = imm;
@@ -145,41 +161,41 @@ module id_stage import riscv_cpu_pkg::*;
     endcase
   end
 
-  assign mem_pipeline.pc                      = pc_id_i;
-  assign mem_pipeline.branch_mux              = branch_mux;
-  assign mem_pipeline.branch_addr             = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};  // to be changed to general address for all possible branches
-  assign mem_pipeline.mem_wdata               = mem_wdata;
-  assign mem_pipeline.mem_we                  = mem_we;
+  assign ex_ctl_d.alu_op                      = alu_op;
 
-  assign wb_pipeline.reg_we                   = reg_we;
-  assign wb_pipeline.wdata_mux                = wdata_mux;
-  assign wb_pipeline.dest_reg                 = dest_reg;
+  assign mem_ctl_d.branch_mux                 = branch_mux;
+  assign mem_ctl_d.mem_we                     = mem_we;
+
+  assign wb_ctl_d.reg_we                      = reg_we;
+  assign wb_ctl_d.wdata_mux                   = wdata_mux;
 
   assign ex_pipeline_d.imm                    = imm;
   assign ex_pipeline_d.alu_data_a             = data_a;
   assign ex_pipeline_d.alu_data_b             = data_b;
-  assign ex_pipeline_d.alu_op                 = alu_op;
-  assign ex_pipeline_d.mem_pipeline           = mem_pipeline;
-  assign ex_pipeline_d.wb_pipeline.id_stage   = wb_pipeline;
+  assign ex_pipeline_d.pc                     = pc_id_i;
+  assign ex_pipeline_d.branch_addr            = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};
+  assign ex_pipeline_d.mem_wdata              = mem_wdata;
+  assign ex_pipeline_d.dest_reg               = dest_reg;
 
   // ID pipeline stage registers
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if(~rst_ni) begin
-      ex_pipeline_q <= '{default:'0};;
-      // ex_pipeline_q = '{
-      //   '0, 
-      //   '0, 
-      //   '0, 
-      //   '0, 
-      //   '{'0, '0, '0, '0, '0}, 
-      //   '{'{'0, '0, '0}, '0} 
-      // };
+      ex_ctl_q      <= '{default: '0};
+      mem_ctl_q     <= '{default: '0};
+      wb_ctl_q      <= '{default: '0};
+      ex_pipeline_q <= '{default: '0};
     end else begin
+      ex_ctl_q      <= ex_ctl_d;
+      mem_ctl_q     <= mem_ctl_d;
+      wb_ctl_q      <= wb_ctl_d;
       ex_pipeline_q <= ex_pipeline_d;
     end
   end
 
   // OUPUT ASSIGNMENT
+  assign ex_ctl_o      = ex_ctl_q;
+  assign mem_ctl_o      = mem_ctl_q;
+  assign wb_ctl_o      = wb_ctl_q;
   assign ex_pipeline_o = ex_pipeline_q;
 
 

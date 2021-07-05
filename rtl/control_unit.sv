@@ -43,7 +43,9 @@ module control_unit import riscv_cpu_pkg::*;
     reg_we_o     = 1'b0;
     jal_op_o     = 1'b0;
     jal_mux_o    = JAL_JUMP;
-    mem_we_o     = 1'b0;      
+    mem_we_o     = 1'b0; 
+    reg_raddr_a_o = instr_i[REG_S1_MSB:REG_S1_LSB]; // make static assignment
+    reg_raddr_b_o = instr_i[REG_S2_MSB:REG_S2_LSB]; // make static assignment
 
     unique case(opcode)
       OPCODE_LUI: data_a_mux_o = OP_A_REG;

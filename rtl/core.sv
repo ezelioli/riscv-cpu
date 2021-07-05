@@ -52,12 +52,18 @@ module core import riscv_cpu_pkg::*;
   logic                  id_we_a;
 
   // EX signals
+  ex_ctl_t ex_ex_ctl;
+  mem_ctl_t ex_mem_ctl;
+  wb_ctl_t ex_wb_ctl;
   id2ex_t ex_pipeline;
 
   // MEM signals
+  mem_ctl_t mem_mem_ctl;
+  wb_ctl_t mem_wb_ctl;
   ex2mem_t mem_pipeline;
 
   // WB signals
+  wb_ctl_t wb_wb_ctl;
   mem2wb_t wb_pipeline;
 
   
@@ -120,6 +126,10 @@ module core import riscv_cpu_pkg::*;
     .jal_op_o         (if_jal_op),
     .jal_addr_o       (if_jal_addr),
 
+    .ex_ctl_o         (ex_ex_ctl),
+    .mem_ctl_o        (ex_mem_ctl),
+    .wb_ctl_o         (ex_wb_ctl),
+
     .ex_pipeline_o    (ex_pipeline)
   );
 
@@ -135,6 +145,13 @@ module core import riscv_cpu_pkg::*;
   ) ex_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
+
+    .ex_ctl_i          (ex_ex_ctl),
+    .mem_ctl_i         (ex_mem_ctl),
+    .wb_ctl_i          (ex_wb_ctl),
+
+    .mem_ctl_o         (mem_mem_ctl),
+    .wb_ctl_o          (mem_wb_ctl),
 
     .ex_pipeline_i     (ex_pipeline),
 
@@ -154,6 +171,11 @@ module core import riscv_cpu_pkg::*;
   ) mem_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
+
+    .mem_ctl_i         (mem_mem_ctl),
+    .wb_ctl_i          (mem_wb_ctl),
+
+    .wb_ctl_o          (wb_wb_ctl),
 
     .mem_pipeline_i    (mem_pipeline),
 
@@ -185,6 +207,8 @@ module core import riscv_cpu_pkg::*;
   ) wb_stage_i (
     .clk_i             (clk_i),
     .rst_ni            (rst_ni),
+
+    .wb_ctl_i          (wb_wb_ctl),
 
     .wb_pipeline_i     (wb_pipeline),
 
