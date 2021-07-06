@@ -22,3 +22,6 @@ add wave -group "id" /tb_top/i_core/id_stage_i/*
 add wave -group "ex" /tb_top/i_core/ex_stage_i/*
 add wave -group "mem" /tb_top/i_core/mem_stage_i/*
 add wave -group "wb" /tb_top/i_core/wb_stage_i/*
+
+add wave -group "register file" /tb_top/i_core/id_stage_i/register_file_i/*
+add wave -group "register file" /tb_top/i_core/id_stage_i/register_file_i/registers

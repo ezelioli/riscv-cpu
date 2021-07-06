@@ -36,6 +36,7 @@ module mem_stage import riscv_cpu_pkg::*;
   logic            [31:0] pc          ;
   logic             [1:0] branch_mux  ;
   logic            [31:0] branch_addr ;
+  logic  [ADDR_WIDTH-1:0] dest_reg;
   logic  [DATA_WIDTH-1:0] alu_result;
   logic  [DATA_WIDTH-1:0] wdata;
   logic                   we;

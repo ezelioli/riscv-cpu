@@ -108,6 +108,7 @@ module control_unit import riscv_cpu_pkg::*;
         imm_mux_o     = IMM_I;
         data_a_mux_o  = OP_A_REG;
         data_b_mux_o  = OP_B_IMM;
+        reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_ALU;
         unique case(funct3)
           ADDI : alu_op_o = ALU_ADD;
@@ -123,6 +124,7 @@ module control_unit import riscv_cpu_pkg::*;
       OPCODE_OP: begin
         data_a_mux_o  = OP_A_REG;
         data_b_mux_o  = OP_B_REG;
+        reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_ALU;
         unique case(funct3)
           ADD : if(instr_i[30] == 1'b0) begin alu_op_o = ALU_ADD; end else begin alu_op_o = ALU_SUB; end
