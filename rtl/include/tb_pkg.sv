@@ -5,7 +5,7 @@ package tb_pkg;
   parameter INSTR_WORD_WIDTH      = 32;
   parameter INSTR_INIT_FILE         = "../rtl/tb/instructions.mem";
   parameter INSTR_CONTENT_LENGTH  = 11; 
-  parameter INSTR_MEM_CONTENT     = { 8'h13, 8'h80, 8'h02, 8'h00, // addi x5, x0, 1
+  parameter INSTR_MEM_CONTENT     = { 8'h93, 8'h02, 8'h10, 8'h00, // addi x5, x0, 1
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
                                       8'h00, 8'h00, 8'h00, 8'h00,
