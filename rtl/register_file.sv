@@ -20,24 +20,39 @@ module register_file import riscv_cpu_pkg::*;
   
   localparam NUM_WORDS = 2 ** ADDR_WIDTH;
 
-  logic [NUM_WORDS-1:0][DATA_WIDTH-1:0] mem_d, mem_q;
+  logic [DATA_WIDTH-1:0] registers [NUM_WORDS-1:0];
 
-  always_comb begin
-    mem_d = mem_q;
-    if(we_a_i == 1'b1) begin
-      mem_d[waddr_a_i] = wdata_a_i;
+  logic [NUM_WORDS-1:0] we_a_dec;
+
+  generate
+    genvar j;
+    for(j = 0; j < NUM_WORDS; j++) begin
+      assign we_a_dec[j] = (j == waddr_a_i) ? we_a_i : 1'b0;
     end
-  end
+  endgenerate
 
-  always_ff @(posedge clk_i or negedge rst_ni) begin : proc_mem_q
-    if(~rst_ni) begin
-      mem_q <= '0;
+  always_ff @(posedge clk_i or negedge rst_ni) begin
+    if (~rst_ni) begin
+      registers[0] <= 32'b0;
     end else begin
-      mem_q <= mem_d;
+      registers[0] <= 32'b0;
     end
   end
 
-  assign rdata_a_o = mem_q[raddr_a_i[ADDR_WIDTH-1:0]];
-  assign rdata_b_o = mem_q[raddr_b_i[ADDR_WIDTH-1:0]];
+  generate
+    genvar i;
+    for(i = 1; i < NUM_WORDS; i++) begin
+      always @(posedge clk_i or negedge rst_ni) begin
+        if(~rst_ni) begin
+          registers[i] <= '0;
+        end else if(we_a_dec[i] == 1'b1) begin
+          registers[i] = wdata_a_i;
+        end
+      end
+    end
+  endgenerate
+
+  assign rdata_a_o = registers[raddr_a_i];
+  assign rdata_b_o = registers[raddr_b_i];
 
 endmodule
