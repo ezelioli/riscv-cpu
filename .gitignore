@@ -1,2 +1,3 @@
 sim/rtl
 sim/work
+sim/*.wlf
