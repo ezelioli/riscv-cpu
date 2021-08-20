@@ -1,5 +1,4 @@
 sim/rtl
 sim/work
-sim/vsim.wlf
 sim/*.wlf
 py/__pycache__
