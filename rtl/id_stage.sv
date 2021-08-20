@@ -121,8 +121,20 @@ module id_stage import riscv_cpu_pkg::*;
   assign dest_reg         = instr_rdata_i[REG_RD_MSB:REG_RD_LSB]; // always the same
   assign mem_wdata        = data_b;
 
-  assign jal_offset  = {instr_rdata_i[31], 12'b0, instr_rdata_i[19:12], instr_rdata_i[20], instr_rdata_i[30:21]};
-  assign jalr_offset = {instr_rdata_i[31], 20'b0, instr_rdata_i[30:20]};
+  //assign jal_offset  = {instr_rdata_i[31], '{12{instr_rdata_i[31]}}, instr_rdata_i[19:12], instr_rdata_i[20], instr_rdata_i[30:21]};
+  // assign jalr_offset = {instr_rdata_i[31], '{20{instr_rdata_i[31]}}, instr_rdata_i[30:20]};
+
+  always_comb begin
+    jal_offset[31] = instr_rdata_i[31];
+    jal_offset[30:19] = '{12{instr_rdata_i[31]}};
+    jal_offset[18:11] = instr_rdata_i[19:12];
+    jal_offset[10] = instr_rdata_i[20];
+    jal_offset[9:0] = instr_rdata_i[30:21];
+
+    jalr_offset[31] = instr_rdata_i[31];
+    jalr_offset[30:11] = instr_rdata_i[31];
+    jalr_offset[10:0] = instr_rdata_i[30:20];
+  end
 
   always_comb begin
     imm = '0;
