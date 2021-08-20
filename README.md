@@ -4,6 +4,6 @@ This repository contains an HDL implementation of a **RISC V** core, implementin
 
 ## RTL simulation
 
-cd sim
-source compile_rtl.sh
-questa-2019.3 vsim -lib work tb_top_opt
+cd sim  
+source compile_rtl.sh  
+questa-2019.3 vsim -lib work tb_top_opt  
