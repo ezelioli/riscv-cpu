@@ -8,6 +8,6 @@
 				nop
 				nop
 	fine:
-				j fine
+				jal x0, fine
 
 .data
