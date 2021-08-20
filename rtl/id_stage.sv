@@ -62,6 +62,8 @@ module id_stage import riscv_cpu_pkg::*;
   logic [31:0] jal_offset;
   logic [31:0] jalr_offset;
 
+  logic [31:0] branch_offset;
+
   //id2mem_t mem_pipeline;
   //id2wb_t  wb_pipeline;
 
@@ -119,12 +121,9 @@ module id_stage import riscv_cpu_pkg::*;
   assign we_a             = we_a_i;
 
   assign dest_reg         = instr_rdata_i[REG_RD_MSB:REG_RD_LSB]; // always the same
-  assign mem_wdata        = data_b;
+  assign mem_wdata        = rdata_b;
 
-  //assign jal_offset  = {instr_rdata_i[31], '{12{instr_rdata_i[31]}}, instr_rdata_i[19:12], instr_rdata_i[20], instr_rdata_i[30:21]};
-  // assign jalr_offset = {instr_rdata_i[31], '{20{instr_rdata_i[31]}}, instr_rdata_i[30:20]};
-
-  always_comb begin
+  always_comb begin : jmp_offset_sign_extension
     jal_offset[31] = instr_rdata_i[31];
     jal_offset[30:19] = '{12{instr_rdata_i[31]}};
     jal_offset[18:11] = instr_rdata_i[19:12];
@@ -132,25 +131,31 @@ module id_stage import riscv_cpu_pkg::*;
     jal_offset[9:0] = instr_rdata_i[30:21];
 
     jalr_offset[31] = instr_rdata_i[31];
-    jalr_offset[30:11] = instr_rdata_i[31];
+    jalr_offset[30:11] = '{20{instr_rdata_i[31]}};
     jalr_offset[10:0] = instr_rdata_i[30:20];
-  end
 
-  always_comb begin
+    branch_offset[31] = instr_rdata_i[31];
+    branch_offset[30:11] = '{20{instr_rdata_i[31]}};
+    branch_offset[10] = instr_rdata_i[7];
+    branch_offset[9:4] = instr_rdata_i[30:25];
+    branch_offset[3:0] = instr_rdata_i[11:8];
+  end : jmp_offset_sign_extension
+
+  always_comb begin : imm_sign_extension
     imm = '0;
     unique case(imm_mux)
       IMM_Z:  imm = '0;
       IMM_I:  begin
-        imm[IMM_NBITS-1:0] = instr_rdata_i[IMM_MSB-1:IMM_LSB];
-        imm[DATA_WIDTH-1]  = instr_rdata_i[IMM_MSB];
+        imm[DATA_WIDTH-1:IMM_NBITS-1]  = '{(DATA_WIDTH-IMM_NBITS+1){instr_rdata_i[IMM_MSB]}};
+        imm[IMM_NBITS-2:0] = instr_rdata_i[IMM_MSB-1:IMM_LSB];
       end
-      IMM_S:  begin
-        imm[IMM_NBITS-1:0] = {instr_rdata_i[30:25], instr_rdata_i[11:7]};
-        imm[31]            = instr_rdata_i[31];
+      IMM_S:  begin // parametrize this
+        imm[DATA_WIDTH-1]  = '{21{instr_rdata_i[31]}};
+        imm[IMM_NBITS-2:0] = {instr_rdata_i[30:25], instr_rdata_i[11:7]};
       end
       IMM_J:  imm = 4;
     endcase
-  end
+  end : imm_sign_extension
 
   always_comb begin
     data_a = rdata_a;
@@ -185,7 +190,7 @@ module id_stage import riscv_cpu_pkg::*;
   assign ex_pipeline_d.alu_data_a             = data_a;
   assign ex_pipeline_d.alu_data_b             = data_b;
   assign ex_pipeline_d.pc                     = pc_id_i;
-  assign ex_pipeline_d.branch_addr            = {instr_rdata_i[31], 20'b0, instr_rdata_i[7], instr_rdata_i[30:25], instr_rdata_i[11:8]};
+  assign ex_pipeline_d.branch_addr            = pc_id_i + branch_offset;
   assign ex_pipeline_d.mem_wdata              = mem_wdata;
   assign ex_pipeline_d.dest_reg               = dest_reg;
 

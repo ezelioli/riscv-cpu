@@ -22,7 +22,8 @@ module data_mem import tb_pkg::*;
     end
   end
 
-  assign addr_int = {addr_i[31:2], 2'b00};
+  // assign addr_int = {addr_i[31:2], 2'b00};
+  assign addr_int = {20'b0, addr_i[11:2], 2'b00};
 
   always @(posedge clk_i) begin
     if (en_i == 1'b1 && we_i == 1'b1) begin

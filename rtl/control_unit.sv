@@ -94,7 +94,7 @@ module control_unit import riscv_cpu_pkg::*;
       end
       OPCODE_STORE: begin
         data_a_mux_o  = OP_A_REG;
-        data_b_mux_o  = OP_B_REG;
+        data_b_mux_o  = OP_B_IMM;
         imm_mux_o     = IMM_S;
         alu_op_o      = ALU_ADD;
         mem_we_o      = 1'b1;

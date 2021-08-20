@@ -41,13 +41,17 @@ def parse_instruction(instr):
 		assert len(args) == 3, 'Instruction not valid'
 		rd, rs1, imm = args
 		imm = int(imm)
+		if imm < 0:
+			imm = 0xFFFFFFFF + (imm + 1)
 		binary += REGISTERS[rd] << 7
 		binary += REGISTERS[rs1] << 15
-		binary += imm << 20
+		binary += (imm & 0x000007FF) << 20
+		binary += get_bit(imm, 32) << 31
 	elif instr_type == 'B':
 		assert len(args) == 3, 'Instruction not valid'
 		rs1, rs2, imm = args
 		imm = int(imm)
+		print(imm)
 		binary += REGISTERS[rs1] << 15
 		binary += REGISTERS[rs2] << 20
 		binary += get_bit(imm, 11) << 7
@@ -81,19 +85,28 @@ def parse_text(lines):
 	parsed_text = []
 	labels = {}
 	mem_offset = 0
+	for line in lines:
+		if line == '.data':
+			break
+		if ':' in line:
+			label = line[:-2].strip()
+			labels[label] = mem_offset
+			continue
+		mem_offset += 1
+	mem_offset = 0
 	for i, line in enumerate(lines):
 		line = line.strip()
 		if line == '.data':
 			break
 		if ':' in line:
-			label = line[:-1]
-			labels[label] = mem_offset
 			continue
 		if line == '':
 			continue
 		for label in labels:
 			if label in line:
-				line = line.replace(label, str(4 * (labels[label] - mem_offset - 1)))
+				print(labels[label])
+				print(mem_offset)
+				line = line.replace(label, str(4 * (labels[label] - mem_offset)))
 		parsed_text.append(parse_instruction(line))
 		mem_offset += 1
 	return parsed_text, labels
@@ -124,7 +137,7 @@ def asmtomem(filename):
 	print(text)
 	# print(labels)
 	# print(data)
-	print(mem)
+	# print(mem)
 	return mem
 
 
