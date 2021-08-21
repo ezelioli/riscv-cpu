@@ -17,7 +17,6 @@ def parse_instruction(instr):
 	binary += OPCODES[name]['opcode']
 	binary += OPCODES[name]['funct3'] << 12 
 	binary += OPCODES[name]['funct7'] << 25
-	# print(args)
 	instr_type = OPCODES[name]['type']
 	if instr_type == 'U':
 		assert len(args) == 2, 'Instruction not valid'
@@ -80,7 +79,7 @@ def parse_instruction(instr):
 	return '%0.8X' % binary
 
 
-def parse_text(lines):
+def parse_text(lines, data):
 	parsed_text = []
 	labels = {}
 	mem_offset = 0
@@ -104,26 +103,38 @@ def parse_text(lines):
 		for label in labels:
 			if label in line:
 				line = line.replace(label, str(4 * (labels[label] - mem_offset)))
+		for label in data:
+			if label in line:
+				line = line.replace(label, str(4 * data[label]['address']))
 		parsed_text.append(parse_instruction(line))
 		mem_offset += 1
 	return parsed_text, labels
 
 
 def parse_data(lines):
-	data = []
+	data = {}
+	for i, line in enumerate(lines):
+		assert ':' in line, 'Wrong data line'
+		label, value = line.split(':')
+		label = label.strip()
+		value = int(value.strip(), 0)
+		data[label] = {'address' : i, 'value' : value}
 	return data
 
 def parse_program(lines):
+	data = {}
+	text = {}
+	for i, line in enumerate(lines):
+		if line.strip() == '.data':
+			if(len(lines) > i):
+				data = parse_data(lines[i+1:])
 	for i, line in enumerate(lines):
 		if line.strip() == '.text':
 			if(len(lines) > i):
-				text, labels = parse_text(lines[i+1:])
-		elif line.strip() == '.data':
-			if(len(lines) > i):
-				data = parse_data(lines[i+1:])
+				text, labels = parse_text(lines[i+1:], data)
 	return text, labels, data
 
-def asmtomem(filename):
+def asmtomachine(filename, textfile, datafile):
 	with open(filename, 'r') as f:
 		lines = f.readlines()
 	text, labels, data = parse_program(lines)
@@ -131,29 +142,40 @@ def asmtomem(filename):
 	for instr in text:
 		for i in range(3, -1, -1):
 			mem.append(instr[i*2:i*2+2])
-	print(text)
-	# print(labels)
-	# print(data)
-	# print(mem)
-	return mem
-
-
-
-def main(filename, outfile):
-	mem = asmtomem(filename) 
-	with open(outfile, 'w') as f:
+	with open(textfile, 'w') as f:
 		f.write('/* INSTRUCTION MEMORY CONTENT */\n')
 		for b in mem:
 			f.write(b + '\n')
 		for i in range(4 * 4):
 			f.write('00\n')
+	with open(datafile, 'w') as f:
+		f.write('/* DATA MEMORY CONTENT */\n')
+		for label in data:
+			value = data[label]['value']
+			f.write('%02X\n' % ((value & 0xFF000000) >> 24))
+			f.write('%02X\n' % ((value & 0x00FF0000) >> 16))
+			f.write('%02X\n' % ((value & 0x0000FF00) >> 8))
+			f.write('%02X\n' % (value & 0x000000FF))
+
+
+	print(text)
+	# print(labels)
+	print(data)
+	# print(mem)
+	return mem
+
+
+
+def main(filename, textfile, datafile):
+	asmtomachine(filename, textfile, datafile) 
 
 if __name__ == '__main__':
 	parser = argparse.ArgumentParser()
 	parser.add_argument('-f', dest='filename', type=str, default='./program.asm')
-	parser.add_argument('-o', dest='outfile', type=str, default='./instructions.mem')
+	parser.add_argument('-t', dest='textfile', type=str, default='./instructions.mem')
+	parser.add_argument('-d', dest='datafile', type=str, default='./data.data')
 	args = parser.parse_args()
 
 	assert os.path.isfile(args.filename), 'ERROR: %s is not a file' % filename
 
-	main(args.filename, args.outfile)
+	main(args.filename, args.textfile, args.datafile)

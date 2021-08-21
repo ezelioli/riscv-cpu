@@ -20,6 +20,7 @@ module data_mem import tb_pkg::*;
     for(i = 0; i < 2 ** 12; ++i) begin
       mem[i] = '0;
     end
+    $readmemh(DATA_INIT_FILE, mem);
   end
 
   // assign addr_int = {addr_i[31:2], 2'b00};
