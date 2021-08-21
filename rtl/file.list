@@ -16,4 +16,6 @@
 
 ../rtl/wb_stage.sv
 
+../rtl/forwarding_unit.sv
+
 ../rtl/core.sv

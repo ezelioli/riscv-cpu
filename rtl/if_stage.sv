@@ -14,6 +14,8 @@ module if_stage import riscv_cpu_pkg::*;
   input  logic               [31:0] jal_addr_i,
   input  logic                      jal_op_i,
 
+  input  logic                      stall_id_i,
+
   // Forwarding ports - control signals
   //input  logic                   clear_instr_valid_i,   // clear instruction valid bit in IF/ID pipe
   input  logic                [1:0] cu_pc_mux_i,             // sel for control unit pc multiplexer
@@ -87,9 +89,11 @@ module if_stage import riscv_cpu_pkg::*;
       pc_old_q    <= '0;
       instr_reg_q <= '0;
     end else begin
-      pc_q        <= pc_d;
-      pc_old_q    <= pc_old_d;
-      instr_reg_q <= instr_reg_d;
+      if(stall_id_i == 1'b0) begin
+        pc_q        <= pc_d;
+        pc_old_q    <= pc_old_d;
+        instr_reg_q <= instr_reg_d;
+      end
     end
   end
 

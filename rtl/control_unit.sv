@@ -56,6 +56,7 @@ module control_unit import riscv_cpu_pkg::*;
         imm_mux_o     = IMM_J;
         data_b_mux_o  = OP_B_IMM;
         alu_op_o      = ALU_ADD;
+        reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_ALU;
         jal_mux_o     = JAL_JUMP;
       end
@@ -65,6 +66,7 @@ module control_unit import riscv_cpu_pkg::*;
         imm_mux_o     = IMM_J;
         data_b_mux_o  = OP_B_IMM;
         alu_op_o      = ALU_ADD;
+        reg_we_o      = 1'b1;
         wdata_mux_o   = WDATA_ALU;
         jal_mux_o     = JAL_JUMPR;
       end

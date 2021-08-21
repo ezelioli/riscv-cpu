@@ -19,6 +19,12 @@ module mem_stage import riscv_cpu_pkg::*;
   // Output signals
   output logic            [31:0] branch_addr_o,
   output logic                   taken_o,
+  output logic  [DATA_WIDTH-1:0] alu_result_o,  // forwarding data
+
+  // To forwandig unit
+  output logic  [ADDR_WIDTH-1:0] dest_reg_o,
+  output logic                   reg_we_o,
+  output logic  [WDATA_MUX_WIDTH-1:0] wb_mux_o,
 
   // Signals reserved for data memory interface
   output logic                   data_req_o,
@@ -132,5 +138,9 @@ module mem_stage import riscv_cpu_pkg::*;
   assign wb_pipeline_o  = wb_pipeline_q;
   assign branch_addr_o  = branch_addr;
   assign taken_o        = b_taken;
+  assign alu_result_o   = alu_result;
+  assign dest_reg_o     = dest_reg;
+  assign reg_we_o       = wb_ctl_i.reg_we;
+  assign wb_mux_o       = wb_ctl_i.wdata_mux;
 
 endmodule

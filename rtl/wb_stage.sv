@@ -13,7 +13,8 @@ module wb_stage import riscv_cpu_pkg::*;
   // Output signals of WB pipeline stage
   output logic  [DATA_WIDTH-1:0] wdata_o,
   output logic  [ADDR_WIDTH-1:0] dest_reg_o,
-  output logic                   we_o
+  output logic                   we_o,
+  output logic  [DATA_WIDTH-1:0] mem_data_o  // forwarding data
 
 );
   
@@ -43,5 +44,6 @@ module wb_stage import riscv_cpu_pkg::*;
 
   assign dest_reg_o   = dest_reg;
   assign we_o         = reg_we;
+  assign mem_data_o   = wdata_o;
 
 endmodule : wb_stage

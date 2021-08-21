@@ -2,4 +2,5 @@ sim/rtl
 sim/work
 sim/*.wlf
 sim/*.ini
+sim/transcript
 py/__pycache__

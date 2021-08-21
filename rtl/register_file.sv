@@ -52,7 +52,20 @@ module register_file import riscv_cpu_pkg::*;
     end
   endgenerate
 
-  assign rdata_a_o = registers[raddr_a_i];
-  assign rdata_b_o = registers[raddr_b_i];
+  always_comb begin // allow sigle cycle read/write to avoid hazards from wb stage
+    rdata_a_o = registers[raddr_a_i];
+    rdata_b_o = registers[raddr_b_i];
+    if(we_a_i == 1'b1) begin
+      if(waddr_a_i == raddr_a_i) begin
+        rdata_a_o = wdata_a_i;
+      end
+      if(waddr_a_i == raddr_b_i) begin
+        rdata_b_o = wdata_a_i;
+      end
+    end
+  end
+
+  // assign rdata_a_o = registers[raddr_a_i];
+  // assign rdata_b_o = registers[raddr_b_i];
 
 endmodule

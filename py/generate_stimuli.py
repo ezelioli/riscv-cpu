@@ -51,7 +51,6 @@ def parse_instruction(instr):
 		assert len(args) == 3, 'Instruction not valid'
 		rs1, rs2, imm = args
 		imm = int(imm)
-		print(imm)
 		binary += REGISTERS[rs1] << 15
 		binary += REGISTERS[rs2] << 20
 		binary += get_bit(imm, 11) << 7
@@ -104,8 +103,6 @@ def parse_text(lines):
 			continue
 		for label in labels:
 			if label in line:
-				print(labels[label])
-				print(mem_offset)
 				line = line.replace(label, str(4 * (labels[label] - mem_offset)))
 		parsed_text.append(parse_instruction(line))
 		mem_offset += 1

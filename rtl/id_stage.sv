@@ -17,6 +17,15 @@ module id_stage import riscv_cpu_pkg::*;
   output logic                      jal_op_o,
   output logic               [31:0] jal_addr_o,
 
+  input logic                       branch_taken_i,
+  input logic                       stall_ex_i,
+
+  // Siganls to Forwarding Unit
+  input  logic [JALR_RDATA_MUX_WIDTH-1:0] jalr_rdata_mux_i,
+  input  logic     [DATA_WIDTH-1:0] alu_result_i,
+  output logic     [ADDR_WIDTH-1:0] raddr_a_o,
+  output logic                      jalr_op_o,
+
   // Pipelined control
   output ex_ctl_t                   ex_ctl_o,
   output mem_ctl_t                  mem_ctl_o,
@@ -53,6 +62,8 @@ module id_stage import riscv_cpu_pkg::*;
 
   logic [DATA_WIDTH-1:0] data_a;
   logic [DATA_WIDTH-1:0] data_b;
+  logic                  data_a_reg;
+  logic                  data_b_reg;
   logic [ADDR_WIDTH-1:0] dest_reg;
   logic [DATA_WIDTH-1:0] imm;
 
@@ -61,6 +72,7 @@ module id_stage import riscv_cpu_pkg::*;
 
   logic [31:0] jal_offset;
   logic [31:0] jalr_offset;
+  logic  [DATA_WIDTH-1:0] jalr_rdata;
 
   logic [31:0] branch_offset;
 
@@ -150,7 +162,7 @@ module id_stage import riscv_cpu_pkg::*;
         imm[IMM_NBITS-2:0] = instr_rdata_i[IMM_MSB-1:IMM_LSB];
       end
       IMM_S:  begin // parametrize this
-        imm[DATA_WIDTH-1]  = '{21{instr_rdata_i[31]}};
+        imm[DATA_WIDTH-1:11]  = '{21{instr_rdata_i[31]}};
         imm[IMM_NBITS-2:0] = {instr_rdata_i[30:25], instr_rdata_i[11:7]};
       end
       IMM_J:  imm = 4;
@@ -160,39 +172,63 @@ module id_stage import riscv_cpu_pkg::*;
   always_comb begin
     data_a = rdata_a;
     data_b = rdata_b;
+    data_a_reg = 1'b0;
+    data_b_reg = 1'b0;
     unique case(data_a_mux)
-      OP_A_REG:   data_a = rdata_a;
+      OP_A_REG: begin
+        data_a = rdata_a;
+        data_a_reg = 1'b1;
+      end
       OP_A_IMM:   data_a = imm;
       OP_A_PC:    data_a = pc_id_i;
     endcase
     unique case(data_b_mux)
-      OP_B_REG:    data_b = rdata_b;
+      OP_B_REG: begin
+        data_b = rdata_b;
+        data_b_reg = 1'b1;
+      end
       OP_B_IMM:    data_b = imm;
     endcase
   end
 
   always_comb begin
-    unique case(jal_mux)
-      JAL_JUMP:  jal_addr_o = pc_id_i + jal_offset;
-      JAL_JUMPR: jal_addr_o = rdata_a + jalr_offset;
+    jalr_rdata = raddr_a;
+    unique case(jalr_rdata_mux_i)
+      JALR_RDATA_REG: jalr_rdata = raddr_a;
+      JALR_RDATA_MEM: jalr_rdata = alu_result_i;
     endcase
   end
 
-  assign ex_ctl_d.alu_op                      = alu_op;
+  always_comb begin
+    jalr_op_o = 1'b0;
+    unique case(jal_mux)
+      JAL_JUMP:  jal_addr_o = pc_id_i + jal_offset;
+      JAL_JUMPR: begin  // potential combinational loop??
+        jal_addr_o = jalr_rdata + jalr_offset;
+        jalr_op_o = 1'b1;
+      end
+    endcase
+  end
 
-  assign mem_ctl_d.branch_mux                 = branch_mux;
-  assign mem_ctl_d.mem_we                     = mem_we;
+  assign ex_ctl_d.alu_op                      = (branch_taken_i == 1'b0) ? alu_op : ALU_ADD;
 
-  assign wb_ctl_d.reg_we                      = reg_we;
-  assign wb_ctl_d.wdata_mux                   = wdata_mux;
+  assign mem_ctl_d.branch_mux                 = (branch_taken_i == 1'b0) ? branch_mux : BU_PC_NEXT;
+  assign mem_ctl_d.mem_we                     = (branch_taken_i == 1'b0) ? mem_we     : 1'b0;
 
-  assign ex_pipeline_d.imm                    = imm;
-  assign ex_pipeline_d.alu_data_a             = data_a;
-  assign ex_pipeline_d.alu_data_b             = data_b;
-  assign ex_pipeline_d.pc                     = pc_id_i;
-  assign ex_pipeline_d.branch_addr            = pc_id_i + branch_offset;
-  assign ex_pipeline_d.mem_wdata              = mem_wdata;
-  assign ex_pipeline_d.dest_reg               = dest_reg;
+  assign wb_ctl_d.reg_we                      = (branch_taken_i == 1'b0) ? reg_we    : 1'b0;
+  assign wb_ctl_d.wdata_mux                   = (branch_taken_i == 1'b0) ? wdata_mux : WDATA_ALU;
+
+  assign ex_pipeline_d.imm                    = (branch_taken_i == 1'b0) ? imm : 32'b0;
+  assign ex_pipeline_d.alu_data_a             = (branch_taken_i == 1'b0) ? data_a : 32'b0;
+  assign ex_pipeline_d.alu_data_b             = (branch_taken_i == 1'b0) ? data_b : 32'b0;
+  assign ex_pipeline_d.reg_raddr_a            = (branch_taken_i == 1'b0) ? raddr_a : '{ADDR_WIDTH{1'b0}};
+  assign ex_pipeline_d.reg_raddr_b            = (branch_taken_i == 1'b0) ? raddr_b : '{ADDR_WIDTH{1'b0}};
+  assign ex_pipeline_d.data_a_reg             = (branch_taken_i == 1'b0) ? data_a_reg : 1'b0;
+  assign ex_pipeline_d.data_b_reg             = (branch_taken_i == 1'b0) ? data_b_reg : 1'b0;
+  assign ex_pipeline_d.pc                     = (branch_taken_i == 1'b0) ? pc_id_i : '0;
+  assign ex_pipeline_d.branch_addr            = (branch_taken_i == 1'b0) ? pc_id_i + branch_offset : 32'b0;
+  assign ex_pipeline_d.mem_wdata              = (branch_taken_i == 1'b0) ? mem_wdata : 32'b0;
+  assign ex_pipeline_d.dest_reg               = (branch_taken_i == 1'b0) ? dest_reg : '{ADDR_WIDTH{1'b0}};
 
   // ID pipeline stage registers
   always_ff @(posedge clk_i or negedge rst_ni) begin
@@ -202,18 +238,20 @@ module id_stage import riscv_cpu_pkg::*;
       wb_ctl_q      <= '{default: '0};
       ex_pipeline_q <= '{default: '0};
     end else begin
-      ex_ctl_q      <= ex_ctl_d;
-      mem_ctl_q     <= mem_ctl_d;
-      wb_ctl_q      <= wb_ctl_d;
-      ex_pipeline_q <= ex_pipeline_d;
+      if(stall_ex_i == 1'b0) begin
+        ex_ctl_q      <= ex_ctl_d;
+        mem_ctl_q     <= mem_ctl_d;
+        wb_ctl_q      <= wb_ctl_d;
+        ex_pipeline_q <= ex_pipeline_d;
+      end
     end
   end
 
   // OUPUT ASSIGNMENT
   assign ex_ctl_o      = ex_ctl_q;
-  assign mem_ctl_o      = mem_ctl_q;
+  assign mem_ctl_o     = mem_ctl_q;
   assign wb_ctl_o      = wb_ctl_q;
   assign ex_pipeline_o = ex_pipeline_q;
-
+  assign raddr_a_o     = raddr_a;
 
 endmodule

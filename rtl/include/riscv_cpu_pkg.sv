@@ -136,6 +136,23 @@ package riscv_cpu_pkg;
   parameter WDATA_ALU = 1'b0;
   parameter WDATA_MEM = 1'b1;
 
+  // JALR RDATA MUX FROM FORWARDING UNIT
+  parameter JALR_RDATA_MUX_WIDTH = 1;
+  parameter JALR_RDATA_REG = 1'b0;
+  parameter JALR_RDATA_MEM = 1'b1;
+//  parameter JALR_RDATA_WB = 2'b00; // not used if reg file can read/write in same cycle
+
+  // ALU DATA A MUX FROM FORWARDING UNIT
+  parameter ALU_DATA_A_MUX_WIDTH = 2;
+  parameter ALU_DATA_A_REG = 2'b00;
+  parameter ALU_DATA_A_MEM = 2'b01;
+  parameter ALU_DATA_A_WB  = 2'b10;
+
+  // ALU DATA A MUX FROM FORWARDING UNIT
+  parameter ALU_DATA_B_MUX_WIDTH = 2;
+  parameter ALU_DATA_B_REG = 2'b00;
+  parameter ALU_DATA_B_MEM = 2'b01;
+  parameter ALU_DATA_B_WB  = 2'b10;
 
 // type definition
 typedef struct{
@@ -156,6 +173,10 @@ typedef struct {
   logic  [DATA_WIDTH-1:0] imm;
   logic  [DATA_WIDTH-1:0] alu_data_a;
   logic  [DATA_WIDTH-1:0] alu_data_b;
+  logic  [ADDR_WIDTH-1:0] reg_raddr_a;
+  logic  [ADDR_WIDTH-1:0] reg_raddr_b;
+  logic                   data_a_reg;  // remember if alu_data_a comes from register
+  logic                   data_b_reg;  // remember if alu_data_b comes from register
   logic            [31:0] pc;
   logic            [31:0] branch_addr;
   logic  [DATA_WIDTH-1:0] mem_wdata;
